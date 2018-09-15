@@ -1,0 +1,8 @@
+.idea/
+ptes_venv/
+*.pyc
+dist/
+*.egg-info/
+*__pycache__/
+*.log
+*test_results/
