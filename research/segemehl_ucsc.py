@@ -1,7 +1,9 @@
 # Takes json outputs from segemehl_encode.py
 # Makes .BED file for UCSC genome browser
 
-import json
+import json, os
+
+from interval import interval
 
 from ptes.lib.general import init_file, writeln_to_file, shell_call
 from ptes.ucsc.ucsc import order_interval_list, list_to_dict, get_track_list
@@ -9,12 +11,8 @@ from ptes.ucsc.ucsc import order_interval_list, list_to_dict, get_track_list
 # Arguments
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("-v","--intervals", type=str,
-                    help="JSON file with read interVals")
-parser.add_argument("-f","--infos", type=str,
-                    help="JSON file with read inFos")
-parser.add_argument("-j","--junctions", type=str,
-                    help="Names of reads of interest")                    
+parser.add_argument("-i","--input", type=str,
+                    help="Folder with input files")                    
 parser.add_argument("-o","--output", type=str,
                     default='bed_track_list.bed',
                     help="Output BED name, will be in ./bed/")                                       
@@ -25,19 +23,20 @@ args = parser.parse_args()
 ### Main  
 
 # Input files 
-read_intervals_name = args.intervals  
+read_intervals_name = args.input.rstrip('/') + '/' + 'intervals_df_segemehl.json'
 with open(read_intervals_name, 'r') as read_intervals_file:
     read_intervals = json.load(read_intervals_file)
     
-read_infos_name = args.infos  
+read_infos_name = args.input.rstrip('/') + '/' + 'infos_df_segemehl.json'  
 with open(read_infos_name, 'r') as read_infos_file:
     read_infos = json.load(read_infos_file)
     
-path_to_file = os.path.dirname(os.path.realpath(read_intervals))
+path_to_file = os.path.dirname(os.path.realpath(read_intervals_name))
 if path_to_file == '':
     path_to_file = '.'
 
-with open(args.junctions, 'r') as junctions_file:
+junctions_name = args.input.rstrip('/') + '/' + 'junc_of_interest.csv'
+with open(junctions_name, 'r') as junctions_file:
     junc_of_interest = set(junctions_file.read().split('\n'))
     
 folder_name = '%s/bed/' % path_to_file
@@ -62,6 +61,7 @@ for key in read_intervals.keys():   # key is mapped read_name
         tuples = read_intervals[key][str(xi)]   # list of intervals of current read alignment    
         tuples = sorted(tuples, key=lambda x:x[0])   # sort by xq        
         values =  [i[1] for i in tuples]   # get rid of xq
+        values =  [interval[x[0][0], x[0][1]] for x in values]   # get rid of xq
         values = order_interval_list(values)   # ascending order is essential for BED lines
         chimeric = False    # by default no chimeric junctions assumed
         start = values[0][0].inf
@@ -88,7 +88,7 @@ for key in read_intervals.keys():   # key is mapped read_name
 
                 read_name = key.replace('/','_').replace(':', '_')                            
                 writeln_to_file('browser position %s:%i-%i' % window, bed_name, folder=folder_name)
-                writeln_to_file(key + ' %s:%i-%i' % window, coord_name, folder=folder_name)
+                writeln_to_file(key + '\t%s:%i-%i' % window, coord_name, folder=folder_name)
                 track_desc = 'track name="%s" description="segemehl output" visibility=2 itemRgb="On"' % key       
                 writeln_to_file(track_desc, bed_name, folder=folder_name)
                 writeln_to_file('\t'.join(track_list1), bed_name, folder=folder_name)
