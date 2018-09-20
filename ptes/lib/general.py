@@ -7,12 +7,16 @@ from collections import defaultdict
 
 
 def write_to_file(line, filename, folder='./'):
+    if folder[-1] != '/':
+        folder = folder + '/'
     output_file = open(folder + filename, 'a')
     output_file.write(line)
     output_file.close()
 
 
 def writeln_to_file(line, filename, folder='./'):
+    if folder[-1] != '/':
+        folder = folder + '/'
     output_file = open(folder + filename, 'a')
     output_file.write(line+'\n')
     output_file.close()    

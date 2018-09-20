@@ -1,18 +1,18 @@
 # Takes segemehl.sam.nohead as input, makes junction table and HTML table for junctions counts
 
 # Imports
-import subprocess, sys, os
+import subprocess, sys, os, pickle, json
 from collections import defaultdict, OrderedDict
 
 import pandas as pd
 import numpy as np
 from interval import interval
 
-from ptes.lib.general import init_file, writeln_to_file, shell_call
+from ptes.lib.general import init_file, writeln_to_file, shell_call, write_to_file
 from ptes.ptes import get_read_interval, one_interval, get_interval_length
 from ptes.ucsc.ucsc import order_interval_list, list_to_dict, get_track_list
 
-# Arguments
+### Arguments
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-i","--input", type=str,
@@ -35,7 +35,7 @@ def read_coord(intervals, infos, read_name, cigar, leftpos, XI, XQ, chrom, flag)
         intervals[read_name][XI].append((xq,read_interval))
         
     
-# Main  
+### Main  
 segemehl_outfile = args.input  # SAM file without header
 dirname = os.path.dirname(os.path.realpath(segemehl_outfile))
 if dirname == '':
@@ -49,6 +49,7 @@ tag_list = ['XI','XQ']
 read_intervals = defaultdict(lambda: defaultdict(list))   # mapped intervals
 read_infos = defaultdict(lambda: defaultdict(list))   # mapped chrom(s) and chain(s)
 
+# Reading SAM input
 
 with open(segemehl_outfile, 'r') as df_segemehl:
     for line in df_segemehl:
@@ -74,15 +75,19 @@ with open(segemehl_outfile, 'r') as df_segemehl:
             sam_attrs['XQ'] = sam_attrs['XQ'].strip('XQ:i:')
             read_coord(read_intervals, read_infos, **sam_attrs)
 
+
+intervals_list = []   # to remember read intervals
 junc_list = []   # from mapped read intervals to list of junctions
 
 for key in read_intervals.keys():   # key is read_name    
     donor_ss = np.nan
     acceptor_ss = np.nan
     xi = 0
-    while read_intervals[key].get(str(xi), None):   # xi - number of current read alignment        
-        values = read_intervals[key][str(xi)]   # list of intervals of current read alignment
-        values = sorted(values, key=lambda x:x[0])   # sort by xq
+    while read_intervals[key].get(str(xi), None):   # xi - number of current read alignment                
+        tuples = read_intervals[key][str(xi)]   # list of intervals of current read alignment    
+        tuples = sorted(tuples, key=lambda x:x[0])   # sort by xq        
+        values =  [i[1] for i in tuples]   # get rid of xq
+        values = order_interval_list(values)   # ascending order is essential for BED lines
         n_j = len(values) - 1
         infos = read_infos[key][str(xi)]
         chroms = set(infos[::2])
@@ -93,44 +98,76 @@ for key in read_intervals.keys():   # key is read_name
             if chrom.startswith('chr'):    # skip contigs
                 chain = chains.pop()                    
                 if n_j > 0:                 # should be every read, just to be sure
-                    if chain == '+':
-                        for i in range(1,len(values)):
-                            donor_ss = str(int(values[i-1][1][0].sup) + 1)
-                            acceptor_ss = str(int(values[i][1][0].inf) - 1)
+                    start = values[0][0].inf
+                    chimeric = False   # by default no chimeric junctions assumed
+                    for i, current_interval in enumerate(values):                                                
+                        current_start = current_interval[0].inf
+                        if current_start < start:   # after chimeric junction
+                            read_list1 = values[:i]
+                            read_list2 = values[i:]
+                            chimeric = True                
+                        else:
+                            start = current_start
+                            
+                        if chain == '+' and i > 0:                        
+                            donor_ss = str(int(values[i-1][0].sup) + 1)
+                            acceptor_ss = str(int(values[i][0].inf) - 1)
                             junc_list.append({'read_name' : key,
                                                            'aln' : xi,
                                                            'n_junctions' : n_j,                                
                                                            'chrom' : chrom, 
                                                            'chain' : chain,
                                                            'donor' : donor_ss,
-                                                           'acceptor' : acceptor_ss}) 
-                    if chain == '-':
-                        for i in range(1,len(values)):
-                            donor_ss = str(int(values[i-1][1][0].inf) - 1)
-                            acceptor_ss = str(int(values[i][1][0].sup) + 1)
+                                                           'acceptor' : acceptor_ss,
+                                                           'chimeric' : chimeric}) 
+                        elif chain == '-' and i > 0:                        
+                            donor_ss = str(int(values[i-1][0].inf) - 1)
+                            acceptor_ss = str(int(values[i][0].sup) + 1)
                             junc_list.append({'read_name' : key,
                                                            'aln' : xi,
                                                            'n_junctions' : n_j,                                
                                                            'chrom' : chrom, 
                                                            'chain' : chain,
                                                            'donor' : donor_ss,
-                                                           'acceptor' : acceptor_ss}) 
+                                                           'acceptor' : acceptor_ss,
+                                                           'chimeric' : chimeric}) 
 
 
+
+with open('%s/intervals_df_segemehl.json' % path_to_file, "w") as intervals_json,\
+    open('%s/infos_df_segemehl.json' % path_to_file, "w") as infos_json:
+    json.dump(read_intervals, intervals_json)
+    json.dump(read_infos, infos_json)   # to do: add chimeric to infos
+    
 mapped_junc_df = pd.DataFrame(junc_list)
-mapped_junc_df = mapped_junc_df[['read_name', 'aln', 'n_junctions', 'chrom', 'chain', 'donor', 'acceptor']].sort_values(by='read_name').reset_index(drop=True)        
+mapped_junc_df = mapped_junc_df[['read_name', 'aln', 'n_junctions', 'chrom', 'chain', 'donor', 'acceptor', 'chimeric']].sort_values(by=['read_name','aln']).reset_index(drop=True)        
 mapped_junc_df.to_csv('%s/mapped_junc_df_segemehl.csv' % path_to_file, sep = '\t')
+shell_call('gzip -f %s/mapped_junc_df_segemehl.csv' % path_to_file)
+
 x = mapped_junc_df.groupby(['n_junctions']).apply(lambda x: x.read_name.nunique()).reset_index(name='counts')
 y = pd.pivot_table(x, index=['n_junctions'], values=['counts'], fill_value=0, aggfunc=sum, margins=True)
-html_file = '%s/segemehl_pivot_table.html' % path_to_file
-init_file(html_file)
-writeln_to_file(y.to_html(), html_file)
+html_file = 'segemehl_pivot_table.html'
+init_file(html_file, folder = path_to_file+'/')
+writeln_to_file(y.to_html(), html_file, folder = path_to_file+'/')
 
+junc_of_interest = set(mapped_junc_df.query('n_junctions >= 2').read_name.unique())
+junc_csv_name = 'junc_of_interest.csv'
+init_file(junc_csv_name, folder = path_to_file+'/')
+writeln_to_file('\n'.join(list(junc_of_interest)), junc_csv_name, folder = path_to_file+'/')
+
+'''
 # BED files
 folder_name = '%s/bed/' % path_to_file
-cmd = 'if [ ! -d %s ]; then mkdir %s; fi' % (folder_name, folder_name)    
-shell_call(cmd)
-junc_of_interest = set(mapped_junc_df.query('n_junctions >= 3').read_name.unique())
+cmd1 = 'if [ ! -d %s ]; then mkdir %s; fi' % (folder_name, folder_name)    
+shell_call(cmd1)
+bed_name = 'bed_track_list.bed'
+coord_name = 'coord_table.csv'
+init_file(bed_name, folder=folder_name)   # one BED file for all tracks
+init_file(coord_name, folder=folder_name)   # read_name - window in genome browser
+writeln_to_file('browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac', bed_name, folder=folder_name)
+writeln_to_file('browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3', bed_name, folder=folder_name)
+writeln_to_file('browser pack gtexGene', bed_name, folder=folder_name)
+
 
 for key in read_intervals.keys():   # key is mapped read_name    
     if key not in junc_of_interest:
@@ -155,40 +192,23 @@ for key in read_intervals.keys():   # key is mapped read_name
                 break
             else:
                 start = current_start
+        xi += 1
         if chimeric:
             read_dict1 = list_to_dict(read_list1)
-            read_dict2 = list_to_dict(read_list2)
-        else:    
-            read_dict = list_to_dict(values)
-        xi += 1        
-        if chrom.startswith('chr'):                        
-            if chimeric:                
+            read_dict2 = list_to_dict(read_list2)                
+            if chrom.startswith('chr'):                                                 
                 track_list1 = get_track_list(chrom, chain, read_dict1, name='chim_donor')
-                track_list2 = get_track_list(chrom, chain, read_dict2, name='chim_acceptor')
-            else:
-                track_list = get_track_list(chrom, chain, read_dict, name='no_chimeric')            
-            junction_letters = 'NA'                        
-            if chimeric:
+                track_list2 = get_track_list(chrom, chain, read_dict2, name='chim_acceptor')            
+                junction_letters = 'NA'                        
                 window = (chrom, 
-                      min(int(track_list1[1]), int(track_list2[1]))-150, 
-                      max(int(track_list1[2]), int(track_list2[2]))+150)    # track_list[1] is chromStart, track_list[2] is chromEnd
-            else:
-                window = (chrom, 
-                      int(track_list[1])-150, 
-                     int(track_list[2])+150)    # track_list[1] is chromStart, track_list[2] is chromEnd
-            out_name = '%s_%s.bed' % (chrom, key)
-            init_file(out_name, folder=folder_name)
-            writeln_to_file('browser position %s:%i-%i' % window, out_name, folder=folder_name)
-            writeln_to_file('browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac', out_name, folder=folder_name)
-            writeln_to_file('browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3', out_name, folder=folder_name)
-            writeln_to_file('browser pack gtexGene', out_name, folder=folder_name)
-            track_desc = 'track name="%s" description="segemehl output" visibility=2 itemRgb="On"' % key       
-            writeln_to_file(track_desc, out_name, folder=folder_name)
- 
-            
-            if chimeric:
-                writeln_to_file('\t'.join(track_list1), out_name, folder=folder_name)
-                writeln_to_file('\t'.join(track_list2), out_name, folder=folder_name)
-            else:                
-                writeln_to_file('\t'.join(track_list), out_name, folder=folder_name)
+                      min(int(track_list1[1]), int(track_list2[1]))-200, 
+                      max(int(track_list1[2]), int(track_list2[2]))+200)    # track_list[1] is chromStart, track_list[2] is chromEnd
+
+                read_name = key.replace('/','_').replace(':', '_')                            
+                writeln_to_file('browser position %s:%i-%i' % window, bed_name, folder=folder_name)
+                track_desc = 'track name="%s" description="segemehl output" visibility=2 itemRgb="On"' % key       
+                writeln_to_file(track_desc, bed_name, folder=folder_name)
+                writeln_to_file('\t'.join(track_list1), bed_name, folder=folder_name)
+                writeln_to_file('\t'.join(track_list2), bed_name, folder=folder_name)
+'''
                                                       
