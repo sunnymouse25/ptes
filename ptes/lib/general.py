@@ -32,6 +32,8 @@ def shell_call(command):
 
 
 def init_file(filename, folder = './'):   # make new empty file
+    if folder[-1] != '/':
+        folder = folder + '/'
     with open(folder+filename, 'w') as output_file:
         pass 
 

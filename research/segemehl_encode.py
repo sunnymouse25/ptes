@@ -147,13 +147,13 @@ shell_call('gzip -f %s/mapped_junc_df_segemehl.csv' % path_to_file)
 x = mapped_junc_df.groupby(['n_junctions']).apply(lambda x: x.read_name.nunique()).reset_index(name='counts')
 y = pd.pivot_table(x, index=['n_junctions'], values=['counts'], fill_value=0, aggfunc=sum, margins=True)
 html_file = 'segemehl_pivot_table.html'
-init_file(html_file, folder = path_to_file+'/')
-writeln_to_file(y.to_html(), html_file, folder = path_to_file+'/')
+init_file(html_file, folder = path_to_file)
+writeln_to_file(y.to_html(), html_file, folder = path_to_file)
 
 junc_of_interest = set(mapped_junc_df.query('n_junctions >= 2').read_name.unique())
 junc_csv_name = 'junc_of_interest.csv'
-init_file(junc_csv_name, folder = path_to_file+'/')
-writeln_to_file('\n'.join(list(junc_of_interest)), junc_csv_name, folder = path_to_file+'/')
+init_file(junc_csv_name, folder = path_to_file)
+writeln_to_file('\n'.join(list(junc_of_interest)), junc_csv_name, folder = path_to_file)
 
 '''
 # BED files
