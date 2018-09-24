@@ -76,6 +76,7 @@ with open(segemehl_outfile, 'r') as df_segemehl:
             read_coord(read_intervals, read_infos, **sam_attrs)
 
 
+# Mapped junctions table            
 intervals_list = []   # to remember read intervals
 junc_list = []   # from mapped read intervals to list of junctions
 
@@ -113,7 +114,7 @@ for key in read_intervals.keys():   # key is read_name
                             donor_ss = str(int(values[i-1][0].sup) + 1)
                             acceptor_ss = str(int(values[i][0].inf) - 1)
                             junc_list.append({'read_name' : key,
-                                                           'aln' : xi,
+                                                           'aln' : xi-1,
                                                            'n_junctions' : n_j,                                
                                                            'chrom' : chrom, 
                                                            'chain' : chain,
@@ -124,7 +125,7 @@ for key in read_intervals.keys():   # key is read_name
                             donor_ss = str(int(values[i-1][0].inf) - 1)
                             acceptor_ss = str(int(values[i][0].sup) + 1)
                             junc_list.append({'read_name' : key,
-                                                           'aln' : xi,
+                                                           'aln' : xi-1,
                                                            'n_junctions' : n_j,                                
                                                            'chrom' : chrom, 
                                                            'chain' : chain,
@@ -141,6 +142,9 @@ with open('%s/intervals_df_segemehl.json' % path_to_file, "w") as intervals_json
     
 mapped_junc_df = pd.DataFrame(junc_list)
 mapped_junc_df = mapped_junc_df[['read_name', 'aln', 'n_junctions', 'chrom', 'chain', 'donor', 'acceptor', 'chimeric']].sort_values(by=['read_name','aln']).reset_index(drop=True)        
+gr = mapped_junc_df.groupby(['read_name','aln']).apply(lambda x: x.chimeric.any()).reset_index(name='chim_read')
+del gr['aln']
+mapped_junc_df = pd.merge(mapped_junc_df, gr, on='read_name').reset_index(drop=True)
 mapped_junc_df.to_csv('%s/mapped_junc_df_segemehl.csv' % path_to_file, sep = '\t')
 shell_call('gzip -f %s/mapped_junc_df_segemehl.csv' % path_to_file)
 
@@ -150,65 +154,10 @@ html_file = 'segemehl_pivot_table.html'
 init_file(html_file, folder = path_to_file)
 writeln_to_file(y.to_html(), html_file, folder = path_to_file)
 
-junc_of_interest = set(mapped_junc_df.query('n_junctions >= 2').read_name.unique())
+junc_of_interest = mapped_junc_df.query('n_junctions >= 2 & chim_read == True').groupby(['read_name','aln'])
 junc_csv_name = 'junc_of_interest.csv'
-init_file(junc_csv_name, folder = path_to_file)
-writeln_to_file('\n'.join(list(junc_of_interest)), junc_csv_name, folder = path_to_file)
+with open('%s/%s' % (path_to_file, junc_csv_name), 'w') as junc_csv:
+    for name, group in junc_of_interest:
+        junc_csv.write('\t'.join([name[0], str(name[1])]) + '\n')
 
-'''
-# BED files
-folder_name = '%s/bed/' % path_to_file
-cmd1 = 'if [ ! -d %s ]; then mkdir %s; fi' % (folder_name, folder_name)    
-shell_call(cmd1)
-bed_name = 'bed_track_list.bed'
-coord_name = 'coord_table.csv'
-init_file(bed_name, folder=folder_name)   # one BED file for all tracks
-init_file(coord_name, folder=folder_name)   # read_name - window in genome browser
-writeln_to_file('browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac', bed_name, folder=folder_name)
-writeln_to_file('browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3', bed_name, folder=folder_name)
-writeln_to_file('browser pack gtexGene', bed_name, folder=folder_name)
-
-
-for key in read_intervals.keys():   # key is mapped read_name    
-    if key not in junc_of_interest:
-        continue            
-    xi = 0
-    while read_intervals[key].get(str(xi), None):   # xi - number of current read alignment                
-        chrom = read_infos[key][str(xi)][0]   
-        query = mapped_junc_df.query('read_name == "%s"' % key)
-        chain = query.chain.iloc[0]        
-        tuples = read_intervals[key][str(xi)]   # list of intervals of current read alignment    
-        tuples = sorted(tuples, key=lambda x:x[0])   # sort by xq        
-        values =  [i[1] for i in tuples]   # get rid of xq
-        values = order_interval_list(values)   # ascending order is essential for BED lines
-        chimeric = False    # by default no chimeric junctions assumed
-        start = values[0][0].inf
-        for i, value in enumerate(values):
-            current_start = value[0].inf
-            if current_start < start:   # after chimeric junction
-                read_list1 = values[:i]
-                read_list2 = values[i:]
-                chimeric = True
-                break
-            else:
-                start = current_start
-        xi += 1
-        if chimeric:
-            read_dict1 = list_to_dict(read_list1)
-            read_dict2 = list_to_dict(read_list2)                
-            if chrom.startswith('chr'):                                                 
-                track_list1 = get_track_list(chrom, chain, read_dict1, name='chim_donor')
-                track_list2 = get_track_list(chrom, chain, read_dict2, name='chim_acceptor')            
-                junction_letters = 'NA'                        
-                window = (chrom, 
-                      min(int(track_list1[1]), int(track_list2[1]))-200, 
-                      max(int(track_list1[2]), int(track_list2[2]))+200)    # track_list[1] is chromStart, track_list[2] is chromEnd
-
-                read_name = key.replace('/','_').replace(':', '_')                            
-                writeln_to_file('browser position %s:%i-%i' % window, bed_name, folder=folder_name)
-                track_desc = 'track name="%s" description="segemehl output" visibility=2 itemRgb="On"' % key       
-                writeln_to_file(track_desc, bed_name, folder=folder_name)
-                writeln_to_file('\t'.join(track_list1), bed_name, folder=folder_name)
-                writeln_to_file('\t'.join(track_list2), bed_name, folder=folder_name)
-'''
                                                       
