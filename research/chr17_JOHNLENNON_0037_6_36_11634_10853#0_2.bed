@@ -1,0 +1,7 @@
+browser position chr17:41584386-41585042
+browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac
+browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3
+browser pack gtexGene
+track name="JOHNLENNON_0037:6:36:11634:10853#0/2" description="segemehl output" visibility=2 itemRgb="On"
+chr17	41584553	41584892	chim_donor	0	+	41584553	41584892	255,0,0	2	12,22	0,317
+chr17	41584536	41584883	chim_acceptor	0	+	41584536	41584883	255,0,0	2	29,13	0,334
