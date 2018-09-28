@@ -20,6 +20,23 @@ args = parser.parse_args()
 
 ### Functions
 
+def split_by_chimeric(lst):
+    '''
+    Takes list of intervals
+    Cuts it by chimeric junctions (previous start > current start)
+    Returns parts of the list
+    '''
+    strt = lst[0][0].inf
+    for i, value in enumerate(lst):
+        current_start = value[0].inf
+        if i > 0 and current_start <= strt:   # after chimeric junction            
+            read_list1 = lst[:i]
+            read_list2 = lst[i:] 
+            return [read_list1] + [x for x in split_by_chimeric(read_list2)]
+        else:
+            strt = current_start
+    return [lst]
+
 ### Main  
 
 # Input files 
@@ -55,39 +72,39 @@ writeln_to_file('browser dense refSeqComposite pubs snp150Common wgEncodeRegDnas
 writeln_to_file('browser pack gtexGene', bed_name, folder=folder_name)
 i = 0
 
-for key, xi in junc_of_interest:   # key is mapped read_name, xi - number of current read alignment
+for line_list in junc_of_interest:   
+    key = line_list[0]  # key is mapped read_name, xi - number of current read alignment
+    xi = line_list[1]
+    annot_donors = line_list[2]
+    annot_acceptors = line_list[3]    
     chrom = read_infos[key][xi][0]           
     chain = read_infos[key][xi][1]        
     tuples = read_intervals[key][xi]   # list of intervals of current read alignment    
     tuples = sorted(tuples, key=lambda x:x[0])   # sort by xq        
     values =  [i[1] for i in tuples]   # get rid of xq
     values =  [interval[x[0][0], x[0][1]] for x in values]   # get rid of xq
-    values = order_interval_list(values)   # ascending order is essential for BED lines
-    chimeric = False    # by default no chimeric junctions assumed
-    start = values[0][0].inf
-    for i, value in enumerate(values):
-        current_start = value[0].inf
-        if current_start < start:   # after chimeric junction
-            read_list1 = values[:i]
-            read_list2 = values[i:]
-            chimeric = True
-            break
-        else:
-            start = current_start
-    if chimeric:
-        read_dict1 = list_to_dict(read_list1)
-        read_dict2 = list_to_dict(read_list2)                
-        if chrom.startswith('chr'):                                                 
-            track_list1 = get_track_list(chrom, chain, read_dict1, name='chim_donor')
-            track_list2 = get_track_list(chrom, chain, read_dict2, name='chim_acceptor')            
-            junction_letters = 'NA'                        
-            window = (chrom, 
-                      min(int(track_list1[1]), int(track_list2[1]))-200, 
-                      max(int(track_list1[2]), int(track_list2[2]))+200)    # track_list[1] is chromStart, track_list[2] is chromEnd
-            read_name = key.replace('/','_').replace(':', '_')                            
-            writeln_to_file('browser position %s:%i-%i' % window, bed_name, folder=folder_name)
-            writeln_to_file(key + '\t%s:%i-%i' % window, coord_name, folder=folder_name)
-            track_desc = 'track name="%s" description="segemehl output" visibility=2 itemRgb="On"' % key       
-            writeln_to_file(track_desc, bed_name, folder=folder_name)
-            writeln_to_file('\t'.join(track_list1), bed_name, folder=folder_name)
-            writeln_to_file('\t'.join(track_list2), bed_name, folder=folder_name)
+    values = order_interval_list(values)   # ascending order is essential for BED lines     
+    track_lists = []
+    windows_min = []
+    windows_max = []
+    for i, part in enumerate(split_by_chimeric(values)):        
+        read_dict = list_to_dict(part)              
+        track_list = get_track_list(chrom, chain, read_dict, name='part_%i' % (i+1))
+        track_lists.append(track_list)
+        junction_letters = 'NA'   # to do: add genome slicer
+        windows_min.append(int(track_list[1]))   # track_list[1] is chromStart, track_list[2] is chromEnd
+        windows_max.append(int(track_list[2]))
+    window = (chrom, 
+              min(windows_min)-200, 
+              max(windows_max)+200) 
+    if max(windows_max) - min(windows_min) >= 1000000:   # too heavy for genome browser 
+        continue
+    read_name = key.replace('/','_').replace(':', '_')                            
+    writeln_to_file('browser position %s:%i-%i' % window, bed_name, folder=folder_name)
+    writeln_to_file(key + '\t%s:%i-%i' % window, coord_name, folder=folder_name)
+    track_desc = 'track name="%s" description="segemehl output" visibility=2 itemRgb="On"' % key       
+    writeln_to_file(track_desc, bed_name, folder=folder_name)
+    for track_list in track_lists:
+        writeln_to_file('\t'.join(track_list), bed_name, folder=folder_name)
+
+        

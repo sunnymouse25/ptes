@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from interval import interval
 
-from ptes.lib.general import init_file, writeln_to_file, shell_call, write_to_file
+from ptes.lib.general import init_file, writeln_to_file, shell_call
 from ptes.ptes import get_read_interval, one_interval, get_interval_length
 from ptes.ucsc.ucsc import order_interval_list, list_to_dict, get_track_list
 
@@ -19,7 +19,7 @@ parser.add_argument("-i","--input", type=str,
                     help="Segemehl output file; SAM file without header")
 parser.add_argument("-j","--json", type=str,
                     default = 'no',
-                    help="if json file with junctions from GTF is present, write yes")   
+                    help="if json file with junctions from GTF is present, write yes. Slower than reading GTF!")   
 parser.add_argument("-a","--acceptors", type=str,
                     default = 'gtf_acceptors.json',
                     help="json file with GTF acceptors, optional")
@@ -42,19 +42,7 @@ def read_coord(intervals, infos, read_name, cigar, leftpos, XI, XQ, chrom, flag)
         infos[read_name][XI].append(chain)
         read_interval = one_interval(get_read_interval(cigar,leftpos, output = 'interval'))   # local alignment is always bound by M
         intervals[read_name][XI].append((xq,read_interval))
-        
-def BinarySearch(a, key, frm, to):
-    if to-frm == 0: 
-        return False
-    i = (to+frm)//2 
-    if a[i] == key:
-        return True
-    elif a[i] > key:
-        return BinarySearch(a,key,frm,i)
-    else:
-        return BinarySearch(a,key,i+1,to) 
-
-        
+    
 ### Main  
 segemehl_outfile = args.input  # SAM file without header
 dirname = os.path.dirname(os.path.realpath(segemehl_outfile))
@@ -210,8 +198,10 @@ junc_of_interest = mapped_junc_df.query('n_junctions >= 2 & chim_read == True').
 junc_csv_name = 'junc_of_interest.csv'
 with open('%s/%s' % (path_to_file, junc_csv_name), 'w') as junc_csv:
     for name, group in junc_of_interest:
-        print name
-        print group
-        junc_csv.write('\t'.join([name[0], str(name[1])]) + '\n')
+        junc_csv.write('\t'.join(map(str,[name[0], 
+                                name[1], 
+                                group.n_junctions.iloc[0], 
+                                sum(list(group.annot_donor)),
+                                sum(list(group.annot_acceptor))])) + '\n')
 
                                                       
