@@ -99,7 +99,7 @@ with open(segemehl_outfile, 'r') as df_segemehl:
             sam_attrs['XQ'] = sam_attrs['XQ'].strip('XQ:i:')
             read_coord(read_intervals, read_infos, **sam_attrs)
 
-PTES_logger.info('Reading SAM input: done')
+PTES_logger.info('Reading SAM input... done')
     
 # Exons GTF to junctions dict
 
