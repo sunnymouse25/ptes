@@ -3,7 +3,12 @@
 # General functions
 
 import subprocess
+import os
 from collections import defaultdict
+import logging
+import logging.config
+
+import yaml
 
 
 def write_to_file(line, filename, folder='./'):
@@ -38,6 +43,22 @@ def init_file(filename, folder = './'):   # make new empty file
         pass 
 
 
+def setup_logging(default_path,
+                  default_level=logging.INFO,
+                  env_key='LOG_CFG'):
+    path = default_path
+    value = os.getenv(env_key, None)
+    if value:
+        path = value
+    if os.path.exists(path):
+        with open(path, 'rt') as f:
+            string = f.read()
+            config = yaml.load(string)
+        logging.config.dictConfig(config)
+    else:
+        logging.basicConfig(level=default_level)        
+        
+        
 def sign(x): return 1 if x >= 0 else -1
 
 

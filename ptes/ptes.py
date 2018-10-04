@@ -138,3 +138,28 @@ def actual_exon_numbers(exons):
     if len(exons) == 12:
         exon_list = [exons[0:3], exons[3:6], exons[6:9], exons[9:12]]
     return exon_list
+
+
+def get_subseq(genome, strand, chrom, s1,e1):  #cut from genome by 1-based coordinates
+    if strand == '+':
+        seq = genome[chrom].seq[s1-1:e1-1]
+    elif strand == '-':
+        seq = genome[chrom].seq[s1-1:e1-1].reverse_complement()
+    return seq   
+    
+def splice_letters(genome, strand, chr, i1, i2):   
+    '''
+    STAR prints first base of donor's intron (i1) and last base of acceptor's intron (i2)
+    This function returns splice site letters by their coordinates
+    '''
+    if strand == '+':
+        donor_ss = get_subseq(genome, '+', chr, i1, (i1+2))
+        acceptor_ss = get_subseq(genome, '+', chr, (i2-1), i2+1)
+    elif strand == '-':
+        donor_ss = get_subseq(genome, '-', chr, (i1-1), (i1+1))
+        acceptor_ss = get_subseq(genome, '-', chr, i2, (i2+2))
+    else: 
+        return "Unknown strand"
+        
+    return str(donor_ss), str(acceptor_ss)         
+    
