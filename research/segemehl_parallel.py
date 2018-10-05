@@ -44,7 +44,7 @@ for i, name in enumerate(file_str.split()):
     cmd_list.append('samtools view -b %s/segemehl.sam > %s/segemehl.bam' % (folder_name, folder_name))    
     cmd_list.append('%s/segemehl.sam' % folder_name)    
     '''
-    cmd_list.append('python segemehl_encode.py -i %s/segemehl.sam.nohead -o %s' % (folder_name, folder_name))    
+    cmd_list.append('python segemehl_encode.py -i %s/segemehl.sam.nohead -o %s -t %s' % (folder_name, folder_name, id))    
     
     writeln_to_file('\n'.join(cmd_list), sh_filename)
 

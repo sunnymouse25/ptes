@@ -55,6 +55,8 @@ def get_read_interval(cigar, leftpos, output='dict'):
         return read_interval
     elif output == 'dict':
         return read_dict
+    elif output == 'list':
+        return read_list
 
 
 def read_sam_attrs(sam_name, tag_list):

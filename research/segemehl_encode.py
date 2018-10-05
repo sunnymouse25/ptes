@@ -1,7 +1,7 @@
 # Takes segemehl.sam.nohead as input, makes junction table and HTML table for junctions counts
 
 # Imports
-import subprocess, sys, os, pickle, json, yaml, datetime
+import subprocess, sys, os, datetime
 from collections import defaultdict, OrderedDict
 
 import pandas as pd
@@ -25,7 +25,9 @@ parser.add_argument("-o","--output", type=str,
                     help="Output folder for results")  
 parser.add_argument("-g","--genome", type=str,
                     default = '/uge_mnt/home/sunnymouse/Human_ref/GRCh37.p13.genome.fa',    
-                    help="Absolute path to genome file")                    
+                    help="Absolute path to genome file")  
+parser.add_argument("-t","--tag", type=str,
+                    help="Tag name for grouping results, i.e. ENCODE id")                    
 args = parser.parse_args()
 
 ### Functions
@@ -207,13 +209,13 @@ PTES_logger.info('Creating BED file...')
 folder_name = '%s/bed/' % path_to_file
 cmd1 = 'if [ ! -d %s ]; then mkdir %s; fi' % (folder_name, folder_name)    
 shell_call(cmd1)
-bed_name = 'bed_track_list.bed'
-coord_name = bed_name + '.coords.csv'
-init_file(bed_name, folder=folder_name)   # one BED file for all tracks
+track_name = '%s_track_list.bed' % args.tag
+coord_name = track_name + '.coords.csv'
+init_file(track_name, folder=folder_name)   # one BED file for all tracks
 init_file(coord_name, folder=folder_name)   # read_name - window in genome browser
-writeln_to_file('browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac', bed_name, folder=folder_name)
-writeln_to_file('browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3', bed_name, folder=folder_name)
-writeln_to_file('browser pack gtexGene', bed_name, folder=folder_name)
+writeln_to_file('browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac', track_name, folder=folder_name)
+writeln_to_file('browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3', track_name, folder=folder_name)
+writeln_to_file('browser pack gtexGene', track_name, folder=folder_name)
 
 with open('%s/%s' % (path_to_file, junc_csv_name), 'w') as junc_csv:
     for name, group in junc_of_interest:
@@ -264,29 +266,50 @@ with open('%s/%s' % (path_to_file, junc_csv_name), 'w') as junc_csv:
         if max(windows_max) - min(windows_min) >= 1000000:   # too heavy for genome browser 
             continue
         read_name = key.replace('/','_').replace(':', '_')  
-        junction_letters_str = '; '.join(junction_letters)
+        junction_letters_str = '; '.join(junction_letters)        
         description = 'letters %s; annot donors %s/%s, acceptors %s/%s' % (junction_letters_str,
                                                                             annot_donors,
                                                                             n_junctions,
                                                                             annot_acceptors,
                                                                             n_junctions)
-        writeln_to_file('browser position %s:%i-%i' % window, bed_name, folder=folder_name)
-        writeln_to_file(key + '\t%s:%i-%i\t' % window + description, coord_name, folder=folder_name)
-        track_desc = 'track name="%s" \
-        description="segemehl output; %s" \
+        
+        writeln_to_file('browser position %s:%i-%i' % window, track_name, folder=folder_name)
+        writeln_to_file(key + '\t%s:%i-%i\t' % window + description, coord_name, folder=folder_name)        
+        bed_name = '%s.bed' % read_name
+        bigbed_name = '%s.bb' % read_name
+        init_file(bed_name, folder=folder_name)
+        track_desc = 'track type=bigBed \
+        name="%s" \
+        description="%s; %s" \
         visibility=2 \
-        itemRgb="On"' % (key, 
-                        description)
-        writeln_to_file(track_desc, bed_name, folder=folder_name)
+        itemRgb="On"\
+        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/%s' % (
+                        args.tag,
+                        key, 
+                        description,
+                        bigbed_name)
+        writeln_to_file(track_desc, track_name, folder=folder_name)
         for track_list in track_lists:
             writeln_to_file('\t'.join(track_list), bed_name, folder=folder_name)
+        shell_call('sort -k1,1 -k2,2n %s%s > %s%s.sorted' % (folder_name,
+                                                            bed_name,
+                                                            folder_name,
+                                                            bed_name))
+        shell_call('bedToBigBed %s%s.sorted %s %s%s' % (folder_name,
+                                                        bed_name, 
+                                                        'http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.chrom.sizes',
+                                                        folder_name,
+                                                        bigbed_name))
+        shell_call('rm %s%s' % (folder_name,
+                                bed_name))                                                
         junc_csv.write('\t'.join(map(str,[name[0], 
-                                    name[1], 
-                                    group.n_junctions.iloc[0],
-                                    chain,
-                                    sum(list(group.annot_donor)),
-                                    sum(list(group.annot_acceptor)),
-                                    junction_letters_str])) + '\n')   
+                                        name[1], 
+                                        group.n_junctions.iloc[0],
+                                        chain,
+                                        sum(list(group.annot_donor)),
+                                        sum(list(group.annot_acceptor)),
+                                        junction_letters_str])
+                                ) + '\n')   
 
 print_time()
 PTES_logger.info('Creating BED file... done')
