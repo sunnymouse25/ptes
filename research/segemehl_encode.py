@@ -1,7 +1,7 @@
 # Takes segemehl.sam.nohead as input, makes junction table and HTML table for junctions counts
 
 # Imports
-import subprocess, sys, os, pickle, json, yaml
+import subprocess, sys, os, pickle, json, yaml, datetime
 from collections import defaultdict, OrderedDict
 
 import pandas as pd
@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-i","--input", type=str,
                     help="Segemehl output file; SAM file without header")                      
 parser.add_argument("-o","--output", type=str,
-                    help="Output folder for .csv and .html files")  
+                    help="Output folder for results")  
 parser.add_argument("-g","--genome", type=str,
                     default = '/uge_mnt/home/sunnymouse/Human_ref/GRCh37.p13.genome.fa',    
                     help="Absolute path to genome file")                    
@@ -57,7 +57,10 @@ def split_by_chimeric(lst):
         else:
             prev_end = value[0].sup
     return [lst]
-    
+
+def print_time():
+    now = datetime.datetime.now()
+    print now.strftime("%Y-%m-%d %H:%M")
 
 ### Main  
 segemehl_outfile = args.input  # SAM file without header
@@ -74,6 +77,7 @@ read_intervals = defaultdict(lambda: defaultdict(list))   # mapped intervals
 read_infos = defaultdict(lambda: defaultdict(list))   # mapped chrom(s) and chain(s)
 
 # Reading SAM input
+print_time()
 PTES_logger.info('Reading SAM input...')
 with open(segemehl_outfile, 'r') as df_segemehl:
     for line in df_segemehl:
@@ -99,6 +103,8 @@ with open(segemehl_outfile, 'r') as df_segemehl:
             sam_attrs['XQ'] = sam_attrs['XQ'].strip('XQ:i:')
             read_coord(read_intervals, read_infos, **sam_attrs)
 
+
+print_time()
 PTES_logger.info('Reading SAM input... done')
     
 # Exons GTF to junctions dict
@@ -120,11 +126,10 @@ with open(gtf_exons_name, 'r') as gtf_exons_file:
         elif chain == '-':
             gtf_donors[chrom].add(strt-1)
             gtf_acceptors[chrom].add(end+1)
-
+print_time()
 PTES_logger.info('Reading GTF... done')    
     
 # Mapped junctions table 
-
 PTES_logger.info('Creating junctions table...')           
 intervals_list = []   # to remember read intervals
 junc_list = []   # from mapped read intervals to list of junctions
@@ -180,6 +185,7 @@ del gr['aln']
 mapped_junc_df = pd.merge(mapped_junc_df, gr, on='read_name').reset_index(drop=True)
 mapped_junc_df.to_csv('%s/mapped_junc_df_segemehl.csv' % path_to_file, sep = '\t')
 shell_call('gzip -f %s/mapped_junc_df_segemehl.csv' % path_to_file)
+print_time()
 PTES_logger.info('Creating junctions table... done')           
 
 x = mapped_junc_df.groupby(['n_junctions','chim_read']).apply(lambda x: x.read_name.nunique()).reset_index(name='counts')
@@ -188,12 +194,13 @@ html_file = 'segemehl_pivot_table.html'
 init_file(html_file, folder = path_to_file)
 writeln_to_file(y.to_html(), html_file, folder = path_to_file)
 
-junc_of_interest = mapped_junc_df.query('n_junctions >= 2 & chim_read == True').groupby(['read_name','aln'])
+junc_of_interest = mapped_junc_df.query('n_junctions >= 2 & chim_read == True').sort_values(by=['annot_donor','annot_acceptor'], ascending=False).reset_index(drop=True).groupby(['read_name','aln'])
 junc_csv_name = 'junc_of_interest.csv'
 
 PTES_logger.info('Reading genome file...')        
 genome_file = args.genome
 genome = SeqIO.index(genome_file, "fasta")
+print_time()
 PTES_logger.info('Reading genome file... done')        
 
 PTES_logger.info('Creating BED file...')
@@ -243,7 +250,7 @@ with open('%s/%s' % (path_to_file, junc_csv_name), 'w') as junc_csv:
         track_lists = []
         windows_min = []
         windows_max = []
-        if sum(map(lambda x: x == 'GT/AG', junction_letters)) < 1:
+        if sum(map(lambda x: x == 'GT/AG', junction_letters)) < 2:
             continue        
         for i, part in enumerate(split_by_chimeric(values)):                    
             read_dict = list_to_dict(part)              
@@ -275,9 +282,12 @@ with open('%s/%s' % (path_to_file, junc_csv_name), 'w') as junc_csv:
             writeln_to_file('\t'.join(track_list), bed_name, folder=folder_name)
         junc_csv.write('\t'.join(map(str,[name[0], 
                                     name[1], 
-                                    group.n_junctions.iloc[0], 
+                                    group.n_junctions.iloc[0],
+                                    chain,
                                     sum(list(group.annot_donor)),
-                                    sum(list(group.annot_acceptor))])) + '\n')   
+                                    sum(list(group.annot_acceptor)),
+                                    junction_letters_str])) + '\n')   
 
+print_time()
 PTES_logger.info('Creating BED file... done')
                                                       
