@@ -1,0 +1,189 @@
+browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac
+browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3
+browser pack gtexGene
+browser position chr13:21714575-21715238
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:101:14814:17192#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_101_14814_17192#0_2.bb
+browser position chr1:19478750-19480491
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:103:17068:17616#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_103_17068_17616#0_2.bb
+browser position chr12:120571985-120574679
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:106:12293:4751#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_106_12293_4751#0_2.bb
+browser position chr2:97856514-97879491
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:108:13072:11013#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_108_13072_11013#0_2.bb
+browser position chr12:54105159-54105583
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:109:18058:14535#0/1; letters GT/AG; GT/AG; annot donors 0/2, acceptors 0/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_109_18058_14535#0_1.bb
+browser position chr19:17440960-17445594
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:110:8447:2623#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_110_8447_2623#0_2.bb
+browser position chr2:97858572-97864428
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:111:14470:10180#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_111_14470_10180#0_2.bb
+browser position chr2:97858571-97864428
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:114:18274:3344#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_114_18274_3344#0_2.bb
+browser position chr8:143424234-143425566
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:14:4706:11533#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 0/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_14_4706_11533#0_2.bb
+browser position chr16:18442359-18486658
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:18:10342:12405#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_18_10342_12405#0_2.bb
+browser position chr2:97808176-97866420
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:20:8130:3820#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_20_8130_3820#0_2.bb
+browser position chr12:54118732-54121416
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:26:2928:9876#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_26_2928_9876#0_2.bb
+browser position chr16:16419091-16419940
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:2:7269:15862#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_2_7269_15862#0_2.bb
+browser position chr7:157984954-158282660
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:33:3610:8328#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_33_3610_8328#0_2.bb
+browser position chr20:61463322-61464616
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:39:11412:20661#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_39_11412_20661#0_2.bb
+browser position chr16:16419091-16419941
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:39:3575:19011#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_39_3575_19011#0_2.bb
+browser position chr12:6787243-6788057
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:3:4053:3140#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_3_4053_3140#0_2.bb
+browser position chr2:216283839-216285615
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:42:2877:11689#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_42_2877_11689#0_2.bb
+browser position chr8:22884486-22885466
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:42:8771:12703#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_42_8771_12703#0_2.bb
+browser position chr5:149428016-149430065
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:43:16731:16201#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 0/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_43_16731_16201#0_2.bb
+browser position chr6:52128735-52131113
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:49:12837:2436#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_49_12837_2436#0_2.bb
+browser position chr19:6678081-6679669
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:4:9144:10395#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_4_9144_10395#0_2.bb
+browser position chr1:245018121-245020358
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:56:1729:8260#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_56_1729_8260#0_2.bb
+browser position chr1:1238311-1243377
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:59:6807:8639#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_59_6807_8639#0_2.bb
+browser position chr2:98165681-98166277
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:63:10745:2084#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_63_10745_2084#0_2.bb
+browser position chr16:21498698-21927545
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:67:18173:11847#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_67_18173_11847#0_2.bb
+browser position chr12:54105159-54105583
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:71:5433:11218#0/1; letters GT/AG; GT/AG; annot donors 0/2, acceptors 0/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_71_5433_11218#0_1.bb
+browser position chr2:216283846-216285615
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:77:14594:8326#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_77_14594_8326#0_2.bb
+browser position chr12:54105159-54105583
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:77:19427:5409#0/1; letters GT/AG; GT/AG; annot donors 0/2, acceptors 0/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_77_19427_5409#0_1.bb
+browser position chr4:155505593-155506916
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:79:15056:10578#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_79_15056_10578#0_2.bb
+browser position chr20:34312759-34317612
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:87:10787:5183#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_87_10787_5183#0_2.bb
+browser position chr19:2042564-2043737
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:7:89:6765:10877#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_7_89_6765_10877#0_2.bb
+browser position chr2:216283839-216285615
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:101:15280:8902#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_101_15280_8902#0_2.bb
+browser position chr2:96574216-96593234
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:101:16297:14807#0/1; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_101_16297_14807#0_1.bb
+browser position chr8:144917514-144918231
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:101:19177:19991#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_101_19177_19991#0_2.bb
+browser position chr11:72406676-72408868
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:106:7617:9832#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_106_7617_9832#0_2.bb
+browser position chr1:22161832-22174400
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:113:4655:17144#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_113_4655_17144#0_2.bb
+browser position chr12:112600101-112601741
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:116:15111:19367#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_116_15111_19367#0_2.bb
+browser position chr2:88423886-88426041
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:11:14717:11557#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_11_14717_11557#0_2.bb
+browser position chr2:98165681-98166277
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:120:3028:15791#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_120_3028_15791#0_2.bb
+browser position chr2:216283839-216285615
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:120:8723:16749#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_120_8723_16749#0_2.bb
+browser position chr17:7077277-7080521
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:13:10521:15350#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_13_10521_15350#0_2.bb
+browser position chr19:51850094-51856677
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:17:14689:10596#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_17_14689_10596#0_2.bb
+browser position chr19:51850094-51856677
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:1:16718:10923#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_1_16718_10923#0_2.bb
+browser position chr22:23962580-23964563
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:28:9786:6918#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_28_9786_6918#0_2.bb
+browser position chr11:61032287-61036874
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:32:4074:16274#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_32_4074_16274#0_2.bb
+browser position chr12:54118732-54121416
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:40:9673:19504#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_40_9673_19504#0_2.bb
+browser position chr19:17440960-17445594
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:44:15001:3462#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_44_15001_3462#0_2.bb
+browser position chr8:145638226-145640343
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:46:8242:19128#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_46_8242_19128#0_2.bb
+browser position chr16:21498698-21927545
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:52:11550:19622#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_52_11550_19622#0_2.bb
+browser position chr1:1560322-1560883
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:52:3207:6550#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_52_3207_6550#0_2.bb
+browser position chr17:73238333-73240682
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:52:8208:2547#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_52_8208_2547#0_2.bb
+browser position chr16:21498698-21927545
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:55:18516:21125#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_55_18516_21125#0_2.bb
+browser position chr6:52128735-52131113
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:62:6662:20780#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_62_6662_20780#0_2.bb
+browser position chr2:96568600-96574522
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:6:13439:13177#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_6_13439_13177#0_2.bb
+browser position chr17:7077277-7080521
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:80:4018:10233#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_80_4018_10233#0_2.bb
+browser position chr16:29396770-29497354
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:86:6962:6139#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_86_6962_6139#0_2.bb
+browser position chr12:26777031-26785016
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:89:11489:20158#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_89_11489_20158#0_2.bb
+browser position chr2:216279369-216285615
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:8:16406:3058#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_8_16406_3058#0_2.bb
+browser position chr16:29396770-29497354
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:94:17268:16730#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_94_17268_16730#0_2.bb
+browser position chr15:52903733-52970893
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:94:4017:4620#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_94_4017_4620#0_2.bb
+browser position chr17:40266832-40268003
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:96:16545:18586#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_96_16545_18586#0_2.bb
+browser position chr2:74758265-74759722
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:97:6809:9097#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_97_6809_9097#0_2.bb
+browser position chr16:16419091-16419941
+track type=bigBed         name="ENCFF148RNW"         description="PRESLEY_0006:8:9:10927:17673#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/PRESLEY_0006_8_9_10927_17673#0_2.bb
+browser position chr1:19479691-19481643
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:100:9283:18138#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_100_9283_18138#0_2.bb
+browser position chr5:149428016-149430065
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:103:1825:3666#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 0/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_103_1825_3666#0_2.bb
+browser position chr16:29396770-29497354
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:106:17424:10248#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_106_17424_10248#0_2.bb
+browser position chr16:16419091-16419941
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:108:10502:7535#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_108_10502_7535#0_2.bb
+browser position chr4:2746981-2749609
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:109:1208:11705#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_109_1208_11705#0_2.bb
+browser position chr4:2955950-2959562
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:111:1792:1379#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_111_1792_1379#0_2.bb
+browser position chr19:6678081-6679669
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:120:2311:18100#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_120_2311_18100#0_2.bb
+browser position chr1:22161832-22174400
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:17:16662:10883#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_17_16662_10883#0_2.bb
+browser position chr16:21498698-21927545
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:18:4826:12582#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_18_4826_12582#0_2.bb
+browser position chr2:96568600-96574522
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:20:18208:18543#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_20_18208_18543#0_2.bb
+browser position chr19:11311507-11313359
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:22:15223:8548#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_22_15223_8548#0_2.bb
+browser position chr16:29396770-29497354
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:27:16047:12098#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_27_16047_12098#0_2.bb
+browser position chr1:144160377-144221920
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:27:17542:6220#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_27_17542_6220#0_2.bb
+browser position chr12:54118732-54121416
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:2:7697:17557#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_2_7697_17557#0_2.bb
+browser position chr19:35989575-36025957
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:38:6887:21200#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_38_6887_21200#0_2.bb
+browser position chr19:58904328-58904964
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:3:18986:12610#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_3_18986_12610#0_2.bb
+browser position chr8:145638226-145640343
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:40:13307:6988#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_40_13307_6988#0_2.bb
+browser position chr2:97858394-97862675
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:43:15693:13420#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_43_15693_13420#0_2.bb
+browser position chr3:14197634-14199732
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:45:5710:21227#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_45_5710_21227#0_2.bb
+browser position chr9:71836185-71843123
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:51:4589:14218#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_51_4589_14218#0_2.bb
+browser position chr2:97867738-97881376
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:5:11761:19890#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_5_11761_19890#0_2.bb
+browser position chr2:216285195-216289102
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:5:13426:18789#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_5_13426_18789#0_2.bb
+browser position chr2:97808176-97857076
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:63:19461:16773#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_63_19461_16773#0_2.bb
+browser position chr2:216279369-216285615
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:65:4552:5867#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_65_4552_5867#0_2.bb
+browser position chr12:6787243-6788057
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:6:1941:17723#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_6_1941_17723#0_2.bb
+browser position chr20:39976054-39977712
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:78:14517:5746#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 0/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_78_14517_5746#0_2.bb
+browser position chr3:52558670-52561863
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:90:8998:14469#0/2; letters GT/AG; GT/AG; annot donors 1/2, acceptors 1/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_90_8998_14469#0_2.bb
+browser position chr2:97856514-97877634
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:98:8855:11177#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_98_8855_11177#0_2.bb
+browser position chr16:29396770-29497354
+track type=bigBed         name="ENCFF148RNW"         description="SINATRA_0009:1:99:15862:11746#0/2; letters GT/AG; GT/AG; annot donors 2/2, acceptors 2/2"         visibility=2         itemRgb="On"        bigDataUrl=https://raw.githubusercontent.com/sunnymouse25/ptes/dev/research/bed/SINATRA_0009_1_99_15862_11746#0_2.bb

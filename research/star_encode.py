@@ -36,10 +36,12 @@ def split_by_p(read_dict):
     Takes read_dict (OrderedDict),
     returns list of dicts: before p and after p
     '''
-    for key in read_dict:
-        
+    items = read_dict.items()
+    for i, item in enumerate(items):
+        if 'p' in item[0]:
+            return [OrderedDict(items[:i]), OrderedDict(items[(i+1):])]
+    return [read_dict]     
             
-
 
 # Main
 
