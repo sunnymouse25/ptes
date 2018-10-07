@@ -1,4 +1,5 @@
-# Takes segemehl.sam.nohead as input, makes junction table and HTML table for junctions counts
+# Takes segemehl.sam.nohead as input, makes junction table and HTML table for junctions counts and BED files
+# TO DO: add progress for making BED files, make 1 large bigBed, write junc_of_interest before making BED files
 
 # Imports
 import subprocess, sys, os, datetime
