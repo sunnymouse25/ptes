@@ -32,7 +32,7 @@ def get_read_interval(cigar, leftpos, output='dict'):
     features_list = []    
     dels = []
     for feature, length in cigar_list:  
-        if 'M' in feature or 'D' in feature or 'N' in feature:
+        if 'M' in feature or 'D' in feature or 'N' in feature or 'p' in feature:
             k = interval[leftpos, leftpos + length - 1]
             leftpos = leftpos + length
             read_interval = read_interval | k
