@@ -153,5 +153,16 @@ def splice_letters(genome, strand, chr, i1, i2):
     else: 
         return "Unknown strand"
         
-    return str(donor_ss), str(acceptor_ss)         
+    return str(donor_ss), str(acceptor_ss)       
+
+def split_by_p(read_dict):
+    '''
+    Takes read_dict (OrderedDict),
+    returns list of dicts: before p and after p
+    '''
+    items = read_dict.items()
+    for i, item in enumerate(items):
+        if 'p' in item[0]:
+            return [OrderedDict(items[:i]), OrderedDict(items[(i+1):])]
+    return [read_dict]     
     

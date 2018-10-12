@@ -4,18 +4,16 @@
 # Makes bigBed files for UCSC genome browser
 
 # Imports
-import subprocess, sys, os, datetime
+import os
 from collections import defaultdict, OrderedDict
 
-import pandas as pd
-import numpy as np
 from interval import interval
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from ptes.lib.general import init_file, writeln_to_file, shell_call
+from ptes.lib.general import init_file, writeln_to_file, write_to_file, shell_call
 from ptes.constants import PTES_logger
-from ptes.ptes import get_read_interval, one_interval, get_interval_length, get_subseq
+from ptes.ptes import get_read_interval, one_interval, get_interval_length, get_subseq, split_by_p
 from ptes.ucsc.ucsc import order_interval_list, list_to_dict, get_track_list
 
 ### Arguments
@@ -33,16 +31,6 @@ parser.add_argument("-t","--tag", type=str,
 args = parser.parse_args()
 
 # Functions
-def split_by_p(read_dict):
-    '''
-    Takes read_dict (OrderedDict),
-    returns list of dicts: before p and after p
-    '''
-    items = read_dict.items()
-    for i, item in enumerate(items):
-        if 'p' in item[0]:
-            return [OrderedDict(items[:i]), OrderedDict(items[(i+1):])]
-    return [read_dict]  
 
 def dict_to_interval(read_dict):
     '''
@@ -82,9 +70,12 @@ PTES_logger.info('Reading GTF... done')
 
 # Reading filtered STAR output
 PTES_logger.info('Reading STAR output...')
-chimeric_file = args.input
-input_name = chimeric_file+'.filtered'
+input_name = args.input
 path_to_file = args.output.rstrip('/')
+outside_name = 'mate_outside.junction'
+outside_list = []
+init_file(outside_name, folder = path_to_file)
+
 mates_inside = 0
 mates_outside = 0
 annot_donors = 0
@@ -137,7 +128,8 @@ with open(input_name, 'r') as input_file:
         mate_intersection = mate1 & mate2
         if mate_intersection == interval():   # zero intersection
             print 'mate outside'
-            mates_outside += 1
+            mates_outside += 1  
+            outside_list.append(line)
         else:    
             print 'mate inside'
             print 'Length of intersection: %i' % get_interval_length(mate_intersection)
@@ -152,4 +144,6 @@ PTES_logger.info('Reading STAR output... done')
 print 'Inside: %i' % mates_inside      
 print 'Outside: %i' % mates_outside      
 print 'Annot donors: %i' % annot_donors      
-print 'Annot acceptors: %i' % annot_acceptors      
+print 'Annot acceptors: %i' % annot_acceptors   
+
+writeln_to_file(''.join(outside_list), outside_name, folder = path_to_file)   

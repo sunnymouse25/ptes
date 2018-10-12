@@ -82,7 +82,6 @@ read_intervals = defaultdict(lambda: defaultdict(list))   # mapped intervals
 read_infos = defaultdict(lambda: defaultdict(list))   # mapped chrom(s) and chain(s)
 
 # Reading SAM input
-print_time()
 PTES_logger.info('Reading SAM input...')
 with open(segemehl_outfile, 'r') as df_segemehl:
     for line in df_segemehl:
@@ -109,7 +108,6 @@ with open(segemehl_outfile, 'r') as df_segemehl:
             read_coord(read_intervals, read_infos, **sam_attrs)
 
 
-print_time()
 PTES_logger.info('Reading SAM input... done')
     
 # Exons GTF to junctions dict
@@ -131,7 +129,7 @@ with open(gtf_exons_name, 'r') as gtf_exons_file:
         elif chain == '-':
             gtf_donors[chrom].add(strt-1)
             gtf_acceptors[chrom].add(end+1)
-print_time()
+
 PTES_logger.info('Reading GTF... done')    
     
 # Mapped junctions table 
@@ -190,7 +188,7 @@ del gr['aln']
 mapped_junc_df = pd.merge(mapped_junc_df, gr, on='read_name').reset_index(drop=True)
 mapped_junc_df.to_csv('%s/mapped_junc_df_segemehl.csv' % path_to_file, sep = '\t')
 shell_call('gzip -f %s/mapped_junc_df_segemehl.csv' % path_to_file)
-print_time()
+
 PTES_logger.info('Creating junctions table... done')           
 
 x = mapped_junc_df.groupby(['n_junctions','chim_read']).apply(lambda x: x.read_name.nunique()).reset_index(name='counts')
@@ -205,7 +203,7 @@ junc_csv_name = 'junc_of_interest.csv'
 PTES_logger.info('Reading genome file...')        
 genome_file = args.genome
 genome = SeqIO.index(genome_file, "fasta")
-print_time()
+
 PTES_logger.info('Reading genome file... done')        
 
 PTES_logger.info('Creating BED file...')
@@ -293,18 +291,7 @@ with open('%s/%s' % (path_to_file, junc_csv_name), 'w') as junc_csv:
                         bigbed_name)
         writeln_to_file(track_desc, track_name, folder=folder_name)
         for track_list in track_lists:
-            writeln_to_file('\t'.join(track_list), bed_name, folder=folder_name)
-        shell_call('sort -k1,1 -k2,2n %s%s > %s%s.sorted' % (folder_name,
-                                                            bed_name,
-                                                            folder_name,
-                                                            bed_name))
-        shell_call('bedToBigBed %s%s.sorted %s %s%s' % (folder_name,
-                                                        bed_name, 
-                                                        'http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.chrom.sizes',
-                                                        folder_name,
-                                                        bigbed_name))
-        shell_call('rm %s%s' % (folder_name,
-                                bed_name))                                                
+            writeln_to_file('\t'.join(track_list), bed_name, folder=folder_name)                                               
         junc_csv.write('\t'.join(map(str,[name[0], 
                                         name[1], 
                                         group.n_junctions.iloc[0],
@@ -314,6 +301,6 @@ with open('%s/%s' % (path_to_file, junc_csv_name), 'w') as junc_csv:
                                         junction_letters_str])
                                 ) + '\n')   
 
-print_time()
+
 PTES_logger.info('Creating BED file... done')
                                                       
