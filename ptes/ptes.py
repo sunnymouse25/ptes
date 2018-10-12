@@ -24,32 +24,22 @@ def order_cigar(row):
 
 def get_read_interval(cigar, leftpos, output='dict'):
     features, lengths = order_cigar(cigar)
-    if isinstance(leftpos, str):
+    if not isinstance(leftpos, int):
         leftpos = int(leftpos)
-    cigar_dict = OrderedDict(zip(features, lengths))  # for match_interval
+    cigar_list = zip(features, lengths)  # for match_interval
     read_interval = interval()
-    read_list = []
-    i = 0  # counting features
-    indels = []
-    i_to_del = False
-    for feature, length in cigar_dict.items():  # OrderedDict is important here
-        if i == 0 and (feature == 'S1' or feature == 'H1'):  # soft-clip in the beginning is not included in leftpos
-            k = interval[leftpos - length, leftpos - 1]
-        elif 'I' in feature:  # does not consume reference
-            indels.append(feature)
-            i_to_del = True
-            continue
-        else:
+    read_list = []    
+    features_list = []    
+    dels = []
+    for feature, length in cigar_list:  
+        if 'M' in feature or 'D' in feature or 'N' in feature:
             k = interval[leftpos, leftpos + length - 1]
             leftpos = leftpos + length
-        read_interval = read_interval | k
-        read_list.append(k)
-        i += 1
+            read_interval = read_interval | k
+            read_list.append(k) 
+            features_list.append(feature)
 
-    if i_to_del:  # indels do not have genomic intervals
-        for x in indels:  # we need to delete them to achieve the same length of features and intervals
-            del cigar_dict[x]
-    read_dict = OrderedDict(zip(cigar_dict.keys(),
+    read_dict = OrderedDict(zip(features_list,
                                 read_list))  # {'S1': interval([586.0, 657.0]), 'M1': interval([658.0, 686.0])}
     if output == 'interval':
         return read_interval

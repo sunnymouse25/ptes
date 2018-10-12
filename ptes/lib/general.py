@@ -7,7 +7,6 @@ import os
 from collections import defaultdict
 import logging
 import logging.config
-import datetime
 
 import yaml
 
