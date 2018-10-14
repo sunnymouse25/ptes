@@ -69,12 +69,13 @@ with open(input_name, 'r') as input_file:
         cigar2 = line_list[13] 
         chim_part1 = get_read_interval(cigar1, coord1)   # not mates, chimeric parts!
         chim_part2 = get_read_interval(cigar2, coord2)
+        mateX = interval[donor_ss, acceptor_ss]
         if 'p' in cigar1:
             splits = split_by_p(chim_part1)
             if chain == '+':
-                mate1 = dict_to_interval(splits[0])
+                mate2 = dict_to_interval(splits[0])
                 mate_intervals = dict_to_interval(splits[1]) | dict_to_interval(chim_part2)
-                mate2 = one_interval(mate_intervals)
+                mate1 = one_interval(mate_intervals)
             if chain == '-':
                 mate_intervals = dict_to_interval(splits[0]) | dict_to_interval(chim_part2)
                 mate1 = one_interval(mate_intervals)
@@ -97,8 +98,9 @@ with open(input_name, 'r') as input_file:
         print chim_part2
         print
         print mate_intervals
-        print mate1
-        print mate2
+        print 'Mate1 ', mate1
+        print 'MateX ', mateX
+        print 'Mate2 ', mate2
         mate_intersection = mate1 & mate2
         if mate_intersection == interval():   # zero intersection
             print 'mate outside'
