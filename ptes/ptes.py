@@ -207,4 +207,29 @@ def mate_intersection(interval1, interval2):
         return 'inside'
 
 
-    # Main
+def return_mates(cigar1, coord1, cigar2, coord2, chain):
+    mate1 = None
+    mate2 = None
+    chim_part1 = get_read_interval(cigar1, coord1)  # not mates, chimeric parts!
+    chim_part2 = get_read_interval(cigar2, coord2)
+    if 'p' in cigar1:
+        splits = split_by_p(chim_part1)
+        if chain == '+':
+            mate2 = dict_to_interval(splits[0])
+            mate_intervals = dict_to_interval(splits[1]) | dict_to_interval(chim_part2)
+            mate1 = one_interval(mate_intervals)
+        if chain == '-':
+            mate_intervals = dict_to_interval(splits[0]) | dict_to_interval(chim_part2)
+            mate1 = one_interval(mate_intervals)
+            mate2 = dict_to_interval(splits[1])
+    elif 'p' in cigar2:
+        splits = split_by_p(chim_part2)
+        if chain == '+':
+            mate_intervals = dict_to_interval(chim_part1) | dict_to_interval(splits[0])
+            mate1 = one_interval(mate_intervals)
+            mate2 = dict_to_interval(splits[1])
+        if chain == '-':
+            mate_intervals = dict_to_interval(chim_part1) | dict_to_interval(splits[1])
+            mate1 = one_interval(mate_intervals)
+            mate2 = dict_to_interval(splits[0])
+    return mate1, mate2

@@ -8,12 +8,10 @@
 ### Arguments
 import argparse
 
-from interval import interval
-
 from ptes.constants import PTES_logger
 from ptes.lib.general import init_file, writeln_to_file
-from ptes.ptes import get_read_interval, one_interval, split_by_p, annot_junctions, \
-    dict_to_interval, mate_intersection
+from ptes.ptes import annot_junctions, \
+    mate_intersection, return_mates
 
 # from Bio import SeqIO
 # from Bio.SeqRecord import SeqRecord
@@ -64,41 +62,12 @@ with open(input_name, 'r') as input_file:
         coord1 = int(line_list[10])
         cigar1 = line_list[11]
         coord2 = int(line_list[12])
-        cigar2 = line_list[13] 
-        chim_part1 = get_read_interval(cigar1, coord1)   # not mates, chimeric parts!
-        chim_part2 = get_read_interval(cigar2, coord2)
-        mateX = interval[donor_ss, acceptor_ss]
-        if 'p' in cigar1:
-            splits = split_by_p(chim_part1)
-            if chain == '+':
-                mate2 = dict_to_interval(splits[0])
-                mate_intervals = dict_to_interval(splits[1]) | dict_to_interval(chim_part2)
-                mate1 = one_interval(mate_intervals)
-            if chain == '-':
-                mate_intervals = dict_to_interval(splits[0]) | dict_to_interval(chim_part2)
-                mate1 = one_interval(mate_intervals)
-                mate2 = dict_to_interval(splits[1])                
-        elif 'p' in cigar2:
-            splits = split_by_p(chim_part2)
-            if chain == '+':
-                mate_intervals = dict_to_interval(chim_part1) | dict_to_interval(splits[0])
-                mate1 = one_interval(mate_intervals)
-                mate2 = dict_to_interval(splits[1])
-            if chain == '-':   
-                mate_intervals = dict_to_interval(chim_part1) | dict_to_interval(splits[1])
-                mate1 = one_interval(mate_intervals)
-                mate2 = dict_to_interval(splits[0])
-        print
-        print cigar1, cigar2
-        print coord1, coord2
-        print chain
-        print chim_part1
-        print chim_part2
-        print
-        print mate_intervals
-        print 'Mate1 ', mate1
-        print 'MateX ', mateX
-        print 'Mate2 ', mate2
+        cigar2 = line_list[13]
+        mate1, mate2 = return_mates(cigar1=cigar1,
+                                    coord1=coord1,
+                                    cigar2=cigar2,
+                                    coord2=coord2,
+                                    chain=chain)
         interval_intersection = mate_intersection(mate1, mate2)
         mates[interval_intersection] += 1
         if interval_intersection == 'outside':
@@ -108,7 +77,6 @@ with open(input_name, 'r') as input_file:
         if acceptor_ss in gtf_acceptors:            
             annot_acceptors += 1
 
- 
 PTES_logger.info('Reading STAR output... done')  
 print 'Inside: %i' % mates['inside']
 print 'Outside: %i' % mates['outside']

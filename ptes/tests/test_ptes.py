@@ -153,5 +153,24 @@ class TestPtes(unittest.TestCase):
             for j, mate2 in enumerate(mates2):
                 self.assertEqual(ptes.mate_intersection(mate1, mate2), res_list[i][j])
 
+
+    def test_return_mates(self):
+        args = ['cigar1', 'coord1', 'cigar2', 'coord2', 'chain']
+        cases = [
+            ['100M200p50M20S', 4000, '50S20M', 1000, '+'],
+            ['20S50M200p100M', 1000, '20M50S', 2000, '-'],
+            ['100M2000p20M50S', 1000, '20S50M', 2000, '+'],
+            ['20S50M2000p100M', 1000, '20M50S', 2000, '-'],
+        ]
+
+        exp_mates = [
+            (interval([1000.0, 4349.0]), interval([4000.0, 4099.0])),
+            (interval([1000.0, 2019.0]), interval([1250.0, 1349.0])),
+            (interval([2000.0, 3119.0]), interval([1000.0, 1099.0])),
+            (interval([1000.0, 2019.0]), interval([3050.0, 3149.0])),
+            ]
+        for i, case in enumerate(cases):
+            self.assertEqual(ptes.return_mates(**dict(zip(args, case))), exp_mates[i])
+
 if __name__ == "__main__":
     unittest.main()
