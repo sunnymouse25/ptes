@@ -21,6 +21,20 @@ except OSError:
 
 class TestPtes(unittest.TestCase):
 
+    input_read_dicts = [
+        OrderedDict([('M1', interval([100.0, 119.0])), ('N1', interval([120.0, 151.0])),
+                     ('M2', interval([152.0, 171.0])), ('p1', interval([172.0, 1171.0])),
+                     ('M3', interval([1172.0, 1247.0]))]),
+        OrderedDict([('M1', interval([100.0, 119.0])), ('N1', interval([120.0, 151.0])),
+                     ('M2', interval([152.0, 171.0])), ('p1', interval([172.0, 1171.0])),
+                     ('S1', interval([1172.0, 1247.0])), ('M3', interval([1248.0, 1260.0]))]),
+        OrderedDict([('S1', interval([96.0, 99.0])),
+                     ('M1', interval([100.0, 119.0])), ('N1', interval([120.0, 151.0])),
+                     ('M2', interval([152.0, 171.0])), ('p1', interval([172.0, 1171.0])),
+                     ('S2', interval([1172.0, 1247.0])), ('M3', interval([1248.0, 1260.0])),
+                     ('S3', interval([1261.0, 1265.0]))]),
+    ]
+
     def test_get_read_interval(self):
         cigars = [
             '20M30S',
@@ -58,15 +72,22 @@ class TestPtes(unittest.TestCase):
                 [('M1', interval([100.0, 119.0])), ('N1', interval([120.0, 151.0])), ('M2', interval([152.0, 171.0])),
                  ('p1', interval([172.0, 1171.0])), ('M3', interval([1172.0, 1247.0]))]),
         ]
-        results = [ptes.split_by_p(read_dict=read_dict) for read_dict in read_dicts]
+        results = [ptes.split_by_p(read_dict=read_dict) for read_dict in self.input_read_dicts]
         exp_results = [
             [
-            OrderedDict(
-                [('M1', interval([100.0, 119.0])), ('N1', interval([120.0, 151.0])), ('M2', interval([152.0, 171.0]))]
-            ),
-            OrderedDict(
-                [('M3', interval([1172.0, 1247.0]))]
-            )
+            OrderedDict([('M1', interval([100.0, 119.0])), ('N1', interval([120.0, 151.0])),
+                         ('M2', interval([152.0, 171.0]))]),
+            OrderedDict([('M3', interval([1172.0, 1247.0]))])
+            ],
+            [
+                OrderedDict([('M1', interval([100.0, 119.0])), ('N1', interval([120.0, 151.0])),
+                             ('M2', interval([152.0, 171.0]))]),
+                OrderedDict([('M3', interval([1248.0, 1260.0]))])
+            ],
+            [
+                OrderedDict([('M1', interval([100.0, 119.0])), ('N1', interval([120.0, 151.0])),
+                             ('M2', interval([152.0, 171.0]))]),
+                OrderedDict([('M3', interval([1248.0, 1260.0]))])
             ],
         ]
         for i in range(len(read_dicts)):
@@ -83,6 +104,7 @@ class TestPtes(unittest.TestCase):
         for real_acceptor in real_acceptors:
             self.assertIn(real_acceptor, acceptors[chrom])
 
+
     def test_get_interval_length(self):
         intervals = [
             interval([100.0, 119.0]),
@@ -98,6 +120,38 @@ class TestPtes(unittest.TestCase):
         for i, one_interval in enumerate(intervals):
             res_length = ptes.get_interval_length(one_interval)
             self.assertEqual(exp_lengths[i], res_length)
+
+
+    def test_dict_to_interval(self):
+        exp_intervals = [
+            interval([100.0, 119.0], [120.0, 151.0], [152.0, 171.0], [1172.0, 1247.0]),
+            interval([100.0, 119.0], [120.0, 151.0], [152.0, 171.0], [1248.0, 1260.0]),
+            interval([100.0, 119.0], [120.0, 151.0], [152.0, 171.0], [1248.0, 1260.0]),
+        ]
+        for i, read_dict in enumerate(self.input_read_dicts):
+            res_interval = ptes.dict_to_interval(read_dict=read_dict)
+            self.assertEqual(exp_intervals[i], res_interval)
+
+
+    def test_mate_intersection(self):
+        res_list = [
+            ['inside', 'outside', 'outside'],
+            ['inside', 'inside', 'outside'],
+            ['inside', 'inside', 'outside'],
+                    ]
+        mates1 = [
+            interval([100.0, 119.0], [152.0, 171.0]),
+            interval([100.0, 119.0], [152.0, 171.0], [1248.0, 1260.0]),
+            interval([100.0, 119.0], [120.0, 151.0], [152.0, 171.0], [1248.0, 1260.0])
+        ]
+        mates2 = [
+            interval([120.0, 151.0]),
+            interval([1172.0, 1247.0]),
+            interval([2000.0, 2047.0]),
+        ]
+        for i, mate1 in enumerate(mates1):
+            for j, mate2 in enumerate(mates2):
+                self.assertEqual(ptes.mate_intersection(mate1, mate2), res_list[i][j])
 
 if __name__ == "__main__":
     unittest.main()

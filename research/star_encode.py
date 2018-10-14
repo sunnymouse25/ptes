@@ -12,8 +12,8 @@ from interval import interval
 
 from ptes.constants import PTES_logger
 from ptes.lib.general import init_file, writeln_to_file
-from ptes.ptes import get_read_interval, one_interval, get_interval_length, split_by_p, annot_junctions, \
-    dict_to_interval
+from ptes.ptes import get_read_interval, one_interval, split_by_p, annot_junctions, \
+    dict_to_interval, mate_intersection
 
 # from Bio import SeqIO
 # from Bio.SeqRecord import SeqRecord
@@ -32,8 +32,6 @@ args = parser.parse_args()
 # Functions
 
 
-# Main
-
 # Exons GTF to junctions dict
 
 PTES_logger.info('Reading GTF...')
@@ -50,8 +48,8 @@ outside_name = 'mate_outside.junction'
 outside_list = []
 init_file(outside_name, folder = path_to_file)
 
-mates_inside = 0
-mates_outside = 0
+mates = {'inside': 0, 'outside': 0}
+
 annot_donors = 0
 annot_acceptors = 0
 with open(input_name, 'r') as input_file:
@@ -101,15 +99,10 @@ with open(input_name, 'r') as input_file:
         print 'Mate1 ', mate1
         print 'MateX ', mateX
         print 'Mate2 ', mate2
-        mate_intersection = mate1 & mate2
-        if mate_intersection == interval():   # zero intersection
-            print 'mate outside'
-            mates_outside += 1  
+        interval_intersection = mate_intersection(mate1, mate2)
+        mates[interval_intersection] += 1
+        if interval_intersection == 'outside':
             outside_list.append(line)
-        else:    
-            print 'mate inside'
-            print 'Length of intersection: %i' % get_interval_length(mate_intersection)
-            mates_inside += 1        
         if donor_ss in gtf_donors:
             annot_donors += 1
         if acceptor_ss in gtf_acceptors:            
@@ -117,8 +110,8 @@ with open(input_name, 'r') as input_file:
 
  
 PTES_logger.info('Reading STAR output... done')  
-print 'Inside: %i' % mates_inside      
-print 'Outside: %i' % mates_outside      
+print 'Inside: %i' % mates['inside']
+print 'Outside: %i' % mates['outside']
 print 'Annot donors: %i' % annot_donors      
 print 'Annot acceptors: %i' % annot_acceptors   
 

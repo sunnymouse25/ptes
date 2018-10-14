@@ -196,3 +196,15 @@ def dict_to_interval(read_dict):
         if 'M' in feature or 'D' in feature or 'N' in feature:
             output_interval = output_interval | item[1]
     return output_interval
+
+
+def mate_intersection(interval1, interval2):
+    intersection = one_interval(interval1) & one_interval(interval2)
+    if intersection == interval():  # zero intersection
+        return 'outside'
+    else:
+        print 'Length of intersection: %i' % get_interval_length(intersection)
+        return 'inside'
+
+
+    # Main
