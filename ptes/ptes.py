@@ -29,8 +29,7 @@ def get_read_interval(cigar, leftpos, output='dict'):
     cigar_list = zip(features, lengths)  # for match_interval
     read_interval = interval()
     read_list = []    
-    features_list = []    
-    dels = []
+    features_list = []
     for feature, length in cigar_list:  
         if 'M' in feature or 'D' in feature or 'N' in feature or 'p' in feature:
             k = interval[leftpos, leftpos + length - 1]
@@ -164,5 +163,36 @@ def split_by_p(read_dict):
     for i, item in enumerate(items):
         if 'p' in item[0]:
             return [OrderedDict(items[:i]), OrderedDict(items[(i+1):])]
-    return [read_dict]     
-    
+    return [read_dict]
+
+
+def annot_junctions(gtf_exons_name):
+    gtf_donors = defaultdict(set)
+    gtf_acceptors = defaultdict(set)
+    with open(gtf_exons_name, 'r') as gtf_exons_file:
+        for line in gtf_exons_file:
+            line_list = line.strip().split()
+            chrom = line_list[0]
+            strt = int(line_list[3])
+            end = int(line_list[4])
+            chain = line_list[6]
+            if chain == '+':
+                gtf_donors[chrom].add(end + 1)
+                gtf_acceptors[chrom].add(strt - 1)
+            elif chain == '-':
+                gtf_donors[chrom].add(strt - 1)
+                gtf_acceptors[chrom].add(end + 1)
+    return gtf_donors, gtf_acceptors
+
+
+def dict_to_interval(read_dict):
+    '''
+    Takes read_dict (OrderedDict),
+    returns interval of intervals for all features that consume reference
+    '''
+    output_interval = interval()
+    for item in read_dict.items():
+        feature = item[0]
+        if 'M' in feature or 'D' in feature or 'N' in feature:
+            output_interval = output_interval | item[1]
+    return output_interval

@@ -35,23 +35,23 @@ args = parser.parse_args()
   
 def split_cigar(cigar, leftpos): 
     '''
-    Returns cigar and leftpos for the 2nd mate if p<0
+    Returns cigar and leftpos for the 2nd mate
     '''      
     num = ''    
     new_leftpos = leftpos
+    new_cigar = cigar.split('p')[1] 
     for letter in cigar:
         if letter in '-0123456789':
             num += letter
-        elif letter in 'MDN':  #consume reference   
+        elif letter in 'MDN':  # consume reference   
             new_leftpos +=(int(num))
             num = ''
         elif letter == 'p':
             new_leftpos +=(int(num))
-            break
-        elif letter in 'SI':   #first S should not be included, last S is after p
-            num = ''            
-        new_cigar = cigar.split('p')[1]        
-    return new_cigar, new_leftpos
+            return new_cigar, new_leftpos
+        elif letter in 'SI':   # first S should not be included, last S is after p
+            num = '0'                       
+    
 
     
 ### Main
@@ -95,7 +95,7 @@ for i, group in enumerate(groups):
         print i
         print group
         line_list = group[1].iloc[0].tolist()
-        num_reads = group[1].shape[0]
+        num_reads = group[1].shape[0]      
         chrom = line_list[0]
         intron1 = int(line_list[1])
         chain = line_list[2]
@@ -112,27 +112,32 @@ for i, group in enumerate(groups):
         cigar1 = line_list[11]
         coord2 = int(line_list[12])
         cigar2 = line_list[13]
-        chim_part1 = get_read_interval(cigar1, coord1)   # not mates, chimeric parts!
-        chim_part2 = get_read_interval(cigar2, coord2)
         track_lists = []
         windows_min = []
         windows_max = []
         if 'p' in cigar1:
-            splits = split_by_p(chim_part1)
-            bed1 = get_track_list(chrom, chain, splits[0], color='r')
-            bed2 = get_track_list(chrom, chain, splits[1], color='r')
-            bed3 = get_track_list(chrom, chain, chim_part2, color='r')
+            mate1 = get_read_interval(cigar1.split('p')[0].rstrip('-0123456789'), coord1)
+            mate2 = get_read_interval(*split_cigar(cigar1, coord1))   
+            chim_part2 = get_read_interval(cigar2, coord2)            
+            bed1 = get_track_list(chrom, chain, mate1, name='mate1', color='r')
+            bed2 = get_track_list(chrom, chain, mate2, name='mate2', color='r')
+            bed3 = get_track_list(chrom, chain, chim_part2, name='chim', color='r')
             track_lists = [bed1, bed2, bed3]
         elif 'p' in cigar2:
-            splits = split_by_p(chim_part2)
-            bed1 = get_track_list(chrom, chain, chim_part1, color='r')
-            bed2 = get_track_list(chrom, chain, splits[0], color='r')
-            bed3 = get_track_list(chrom, chain, splits[1], color='r')
+            mate1 = get_read_interval(cigar2.split('p')[0].rstrip('-0123456789'), coord2)
+            mate2 = get_read_interval(*split_cigar(cigar2, coord2))   
+            chim_part2 = get_read_interval(cigar1, coord1)
+            bed1 = get_track_list(chrom, chain, mate1, name='mate1', color='r')
+            bed2 = get_track_list(chrom, chain, mate2, name='mate2', color='r')
+            bed3 = get_track_list(chrom, chain, chim_part2, name='chim', color='r')
             track_lists = [bed1, bed2, bed3]
         else:   #single-read mode
-            bed1 = get_track_list(chrom, chain, cigar1, coord1, color='r')
-            bed2 = get_track_list(chrom, chain, cigar2, coord2, color='b')
+            chim_part1 = get_read_interval(cigar1, coord1)   # not mates, chimeric parts!
+            chim_part2 = get_read_interval(cigar2, coord2)
+            bed1 = get_track_list(chrom, chain, chim_part1, name='chim_part1', color='r')
+            bed2 = get_track_list(chrom, chain, chim_part2, name='chim_part2', color='b')
             track_lists = [bed1, bed2]
+            
         for track_list in track_lists:
             windows_min.append(int(track_list[1]))   # track_list[1] is chromStart, track_list[2] is chromEnd
             windows_max.append(int(track_list[2]))  
@@ -140,8 +145,7 @@ for i, group in enumerate(groups):
         window = (chrom, 
                   min(windows_min)-200, 
                   max(windows_max)+200)   # bed1[2] is chromEnd        
-        if max(windows_max) - min(windows_min) >= 1000000:   # too heavy for genome browser 
-            continue                                       
+                                      
         description = "%s; %i read(s) found; chim junction %s" % (desc, num_reads, junction_letters)
         writeln_to_file('browser position %s:%i-%i\t' % window + description, coord_name, folder = folder_name) 
         if i == 0:

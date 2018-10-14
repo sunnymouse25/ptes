@@ -4,20 +4,19 @@
 # Makes bigBed files for UCSC genome browser
 
 # Imports
-import os
-from collections import defaultdict, OrderedDict
-
-from interval import interval
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-
-from ptes.lib.general import init_file, writeln_to_file, write_to_file, shell_call
-from ptes.constants import PTES_logger
-from ptes.ptes import get_read_interval, one_interval, get_interval_length, get_subseq, split_by_p
-from ptes.ucsc.ucsc import order_interval_list, list_to_dict, get_track_list
 
 ### Arguments
 import argparse
+
+from interval import interval
+
+from ptes.constants import PTES_logger
+from ptes.lib.general import init_file, writeln_to_file
+from ptes.ptes import get_read_interval, one_interval, get_interval_length, split_by_p, annot_junctions, \
+    dict_to_interval
+
+# from Bio import SeqIO
+# from Bio.SeqRecord import SeqRecord
 parser = argparse.ArgumentParser()
 parser.add_argument("-i","--input", type=str,
                     help="STAR output, Chimeric.out.junction")                      
@@ -32,17 +31,6 @@ args = parser.parse_args()
 
 # Functions
 
-def dict_to_interval(read_dict):
-    '''
-    Takes read_dict (OrderedDict),
-    returns interval of intervals for all features that consume reference
-    '''
-    output_interval = interval()
-    for item in read_dict.items():
-        feature = item[0]
-        if 'M' in feature or 'D' in feature or 'N' in feature:
-            output_interval = output_interval | item[1]
-    return output_interval
 
 # Main
 
@@ -50,21 +38,7 @@ def dict_to_interval(read_dict):
 
 PTES_logger.info('Reading GTF...')
 gtf_exons_name = '/uge_mnt/home/sunnymouse/Human_ref/hg19_exons_prot_coding.gtf'
-gtf_donors = defaultdict(set)
-gtf_acceptors = defaultdict(set)
-with open(gtf_exons_name, 'r') as gtf_exons_file:
-    for line in gtf_exons_file:
-        line_list = line.strip().split()
-        chrom = line_list[0]
-        strt = int(line_list[3])
-        end = int(line_list[4])
-        chain = line_list[6]
-        if chain == '+':
-            gtf_donors[chrom].add(end+1)
-            gtf_acceptors[chrom].add(strt-1)
-        elif chain == '-':
-            gtf_donors[chrom].add(strt-1)
-            gtf_acceptors[chrom].add(end+1)
+gtf_donors, gtf_acceptors = annot_junctions(gtf_exons_name=gtf_exons_name)
 
 PTES_logger.info('Reading GTF... done')  
 
