@@ -1,7 +1,7 @@
 # Takes paired-end STAR output Chimeric.out.junction
 # Finds "mate-outside" and "mate-inside", with GT/AG and unique mapped reads, 
 # Counts x / (x + y) where x is N(mate-outside) and y is N(mate-inside)
-# Makes bigBed files for UCSC genome browser
+# Copies lines with mates outside to mates_outside.junction to make bigBed files for UCSC genome browser
 
 # Imports
 
@@ -24,7 +24,7 @@ parser.add_argument("-g","--genome", type=str,
                     default = '/uge_mnt/home/sunnymouse/Human_ref/GRCh37.p13.genome.fa',    
                     help="Absolute path to genome file")  
 parser.add_argument("-t","--tag", type=str,
-                    help="Tag name for grouping results, i.e. ENCODE id")                    
+                    help="Tag name for grouping results, i.e. ENCODE id")
 args = parser.parse_args()
 
 # Functions
@@ -33,7 +33,7 @@ args = parser.parse_args()
 # Exons GTF to junctions dict
 
 PTES_logger.info('Reading GTF...')
-gtf_exons_name = '/uge_mnt/home/sunnymouse/Human_ref/hg19_exons_prot_coding.gtf'
+gtf_exons_name = '/uge_mnt/home/sunnymouse/Human_ref/hg19_exons.gtf'
 gtf_donors, gtf_acceptors = annot_junctions(gtf_exons_name=gtf_exons_name)
 
 PTES_logger.info('Reading GTF... done')  
@@ -46,7 +46,7 @@ outside_name = 'mate_outside.junction'
 outside_list = []
 init_file(outside_name, folder = path_to_file)
 
-mates = {'inside': 0, 'outside': 0}
+mates = {'inside': 0, 'outside': 0, 'non-chim' : 0}
 
 annot_donors = 0
 annot_acceptors = 0
@@ -63,6 +63,17 @@ with open(input_name, 'r') as input_file:
         cigar1 = line_list[11]
         coord2 = int(line_list[12])
         cigar2 = line_list[13]
+        print 'Length of chim junction %i' % (donor_ss-acceptor_ss)
+        if chain == '+':
+            if donor_ss < acceptor_ss:
+                print 'Not chimeric? ', donor_ss, acceptor_ss
+                mates['non-chim'] += 1
+                continue
+        elif chain == '-':
+            if donor_ss > acceptor_ss:
+                print 'Not chimeric? ', donor_ss, acceptor_ss
+                mates['non-chim'] += 1
+                continue
         mate1, mate2 = return_mates(cigar1=cigar1,
                                     coord1=coord1,
                                     cigar2=cigar2,
@@ -80,7 +91,8 @@ with open(input_name, 'r') as input_file:
 PTES_logger.info('Reading STAR output... done')  
 print 'Inside: %i' % mates['inside']
 print 'Outside: %i' % mates['outside']
-print 'Annot donors: %i' % annot_donors      
+print 'Intron too large: %i' % mates['non-chim']
+print 'Annot donors: %i' % annot_donors
 print 'Annot acceptors: %i' % annot_acceptors   
 
 writeln_to_file(''.join(outside_list), outside_name, folder = path_to_file)   

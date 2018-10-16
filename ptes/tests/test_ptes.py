@@ -99,6 +99,8 @@ class TestPtes(unittest.TestCase):
         chrom = 'chr16'
         real_donors = [2138327, 30020798]   # chain +, chain -
         real_acceptors = [2138227, 30020879]   # also present in SJ.out.tab
+        star_donors = []
+        star_acceptors = []
         for real_donor in real_donors:
             self.assertIn(real_donor, donors[chrom])
         for real_acceptor in real_acceptors:
@@ -161,6 +163,10 @@ class TestPtes(unittest.TestCase):
             ['20S50M200p100M', 1000, '20M50S', 2000, '-'],
             ['100M2000p20M50S', 1000, '20S50M', 2000, '+'],
             ['20S50M2000p100M', 1000, '20M50S', 2000, '-'],
+            ['20M50S', 2000, '20S50M2000p100M', 1000, '+'],
+            ['20S50M', 2000, '100M1900p20M50S', 1000, '-'],
+            ['20S50M3000S', 2000, '100M1900p20M50S', 1000, '-'],
+            ['20S50M', 2000, '100M910N50M940p20M50S', 1000, '-'],
         ]
 
         exp_mates = [
@@ -168,9 +174,23 @@ class TestPtes(unittest.TestCase):
             (interval([1000.0, 2019.0]), interval([1250.0, 1349.0])),
             (interval([2000.0, 3119.0]), interval([1000.0, 1099.0])),
             (interval([1000.0, 2019.0]), interval([3050.0, 3149.0])),
+            (interval([1000.0, 2019.0]), interval([3050.0, 3149.0])),
+            (interval([2000.0, 3019.0]), interval([1000.0, 1099.0])),
+            (interval([2000.0, 3019.0]), interval([1000.0, 1099.0])),
+            (interval([2000.0, 3019.0]), interval([1000.0, 2059.0])),
             ]
         for i, case in enumerate(cases):
-            self.assertEqual(ptes.return_mates(**dict(zip(args, case))), exp_mates[i])
+            mate1, mate2 = ptes.return_mates(**dict(zip(args, case)))
+            self.assertEqual((mate1,mate2), exp_mates[i])
+            print ptes.mate_intersection(mate1, mate2)
+
+
+    def test_order_interval_list(self):
+        interval_lists = [
+            [interval([1000.0, 4349.0]), interval([4000.0, 4099.0])],
+            [interval([1000.0, 4349.0]), interval([4000.0, 4099.0]), interval([3050.0, 3149.0])],
+        ]
+
 
 if __name__ == "__main__":
     unittest.main()

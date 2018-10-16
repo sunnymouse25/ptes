@@ -9,7 +9,8 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
 from ptes.lib.general import init_file, writeln_to_file, shell_call
-from ptes.ucsc.ucsc import order_interval_list, list_to_dict, get_track_list
+from ptes.ucsc.ucsc import list_to_dict, get_track_list
+from ptes.ptes import order_interval_list
 
 # Arguments
 import argparse

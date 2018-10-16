@@ -1,4 +1,4 @@
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 
 from ptes.ptes import get_interval_length
 
@@ -12,18 +12,6 @@ def list_to_dict(lst):
     names = map(lambda x: 'M' + str(x), numbers)
     dct = OrderedDict(zip(names,lst))
     return dct
-
-
-def order_interval_list(values):
-    """
-    For list of intervals returns list in increasing order:
-    inverts for '-' chain
-    """
-    start = values[0][0].inf
-    last_start = values[-1][0].inf  
-    if start > last_start:
-        values = values[::-1]
-    return values
 
 
 def get_track_list(chrom, chain, read_dict, name = 'sim_read', color = 'r'):

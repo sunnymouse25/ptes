@@ -1,26 +1,24 @@
 # Takes segemehl.sam.nohead as input, makes junction table and HTML table for junctions counts and BED files
-# TO DO: add progress for making BED files (logger), 
-# write junc_of_interest before making BED files,
+# TO DO: # write junc_of_interest before making BED files,
 # make unique colors for chimeric parts from 1 read
-
-# Imports
-import subprocess, sys, os, datetime
-from collections import defaultdict, OrderedDict
-
-import pandas as pd
-import numpy as np
-from interval import interval
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-
-from ptes.lib.general import init_file, writeln_to_file, shell_call
-from ptes.constants import PTES_logger
-from ptes.ptes import get_read_interval, one_interval, get_interval_length, get_subseq
-from ptes.ucsc.ucsc import order_interval_list, list_to_dict, get_track_list
-
 
 ### Arguments
 import argparse
+# Imports
+import os
+from collections import defaultdict
+
+import numpy as np
+import pandas as pd
+from Bio import SeqIO
+from interval import interval
+
+from ptes.constants import PTES_logger
+from ptes.lib.general import init_file, writeln_to_file, shell_call
+from ptes.ptes import get_read_interval, one_interval, get_subseq, annot_junctions, \
+    split_by_chimeric, order_interval_list
+from ptes.ucsc.ucsc import list_to_dict, get_track_list
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-i","--input", type=str,
                     help="Segemehl output file; SAM file without header")                      
@@ -45,29 +43,9 @@ def read_coord(intervals, infos, read_name, cigar, leftpos, XI, XQ, chrom, flag)
         infos[read_name][XI].append(chain)
         read_interval = one_interval(get_read_interval(cigar,leftpos, output = 'interval'))   # local alignment is always bound by M
         intervals[read_name][XI].append((xq,read_interval))
-        
-def split_by_chimeric(lst):
-    '''
-    Takes list of intervals
-    Cuts it by chimeric junctions (previous start > current start)
-    Returns parts of the list
-    '''
-    prev_end = lst[0][0].sup
-    for i, value in enumerate(lst):
-        current_start = value[0].inf
-        if i > 0 and current_start <= prev_end:   # after chimeric junction            
-            read_list1 = lst[:i]
-            read_list2 = lst[i:] 
-            return [read_list1] + [x for x in split_by_chimeric(read_list2)]
-        else:
-            prev_end = value[0].sup
-    return [lst]
 
-def print_time():
-    now = datetime.datetime.now()
-    print now.strftime("%Y-%m-%d %H:%M")
 
-### Main  
+### Main
 segemehl_outfile = args.input  # SAM file without header
 dirname = os.path.dirname(os.path.realpath(segemehl_outfile))
 if dirname == '':
@@ -114,22 +92,7 @@ PTES_logger.info('Reading SAM input... done')
 
 PTES_logger.info('Reading GTF...')
 gtf_exons_name = '/uge_mnt/home/sunnymouse/Human_ref/hg19_exons.gtf'
-gtf_donors = defaultdict(set)
-gtf_acceptors = defaultdict(set)
-with open(gtf_exons_name, 'r') as gtf_exons_file:
-    for line in gtf_exons_file:
-        line_list = line.strip().split()
-        chrom = line_list[0]
-        strt = int(line_list[3])
-        end = int(line_list[4])
-        chain = line_list[6]
-        if chain == '+':
-            gtf_donors[chrom].add(end+1)
-            gtf_acceptors[chrom].add(strt-1)
-        elif chain == '-':
-            gtf_donors[chrom].add(strt-1)
-            gtf_acceptors[chrom].add(end+1)
-
+gtf_donors, gtf_acceptors = annot_junctions(gtf_exons_name=gtf_exons_name)
 PTES_logger.info('Reading GTF... done')    
     
 # Mapped junctions table 

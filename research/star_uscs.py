@@ -12,8 +12,8 @@ from interval import interval
 import pandas as pd
 
 from ptes.lib.general import init_file, writeln_to_file, shell_call
-from ptes.ptes import get_read_interval, one_interval, get_interval_length, split_by_p
-from ptes.ucsc.ucsc import order_interval_list, list_to_dict, get_track_list
+from ptes.ptes import get_read_interval, one_interval, get_interval_length, split_by_p, order_interval_list
+from ptes.ucsc.ucsc import list_to_dict, get_track_list
 
 
 ### Arguments

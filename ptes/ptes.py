@@ -203,7 +203,6 @@ def mate_intersection(interval1, interval2):
     if intersection == interval():  # zero intersection
         return 'outside'
     else:
-        print 'Length of intersection: %i' % get_interval_length(intersection)
         return 'inside'
 
 
@@ -215,21 +214,51 @@ def return_mates(cigar1, coord1, cigar2, coord2, chain):
     if 'p' in cigar1:
         splits = split_by_p(chim_part1)
         if chain == '+':
-            mate2 = dict_to_interval(splits[0])
+            mate2 = one_interval(dict_to_interval(splits[0]))
             mate_intervals = dict_to_interval(splits[1]) | dict_to_interval(chim_part2)
             mate1 = one_interval(mate_intervals)
         if chain == '-':
             mate_intervals = dict_to_interval(splits[0]) | dict_to_interval(chim_part2)
             mate1 = one_interval(mate_intervals)
-            mate2 = dict_to_interval(splits[1])
+            mate2 = one_interval(dict_to_interval(splits[1]))
     elif 'p' in cigar2:
         splits = split_by_p(chim_part2)
         if chain == '+':
             mate_intervals = dict_to_interval(chim_part1) | dict_to_interval(splits[0])
             mate1 = one_interval(mate_intervals)
-            mate2 = dict_to_interval(splits[1])
+            mate2 = one_interval(dict_to_interval(splits[1]))
         if chain == '-':
             mate_intervals = dict_to_interval(chim_part1) | dict_to_interval(splits[1])
             mate1 = one_interval(mate_intervals)
-            mate2 = dict_to_interval(splits[0])
+            mate2 = one_interval(dict_to_interval(splits[0]))
     return mate1, mate2
+
+
+def split_by_chimeric(lst):
+    '''
+    Takes list of intervals
+    Cuts it by chimeric junctions (previous start > current start)
+    Returns parts of the list
+    '''
+    prev_end = lst[0][0].sup
+    for i, value in enumerate(lst):
+        current_start = value[0].inf
+        if i > 0 and current_start <= prev_end:   # after chimeric junction
+            read_list1 = lst[:i]
+            read_list2 = lst[i:]
+            return [read_list1] + [x for x in split_by_chimeric(read_list2)]
+        else:
+            prev_end = value[0].sup
+    return [lst]
+
+
+def order_interval_list(values):
+    """
+    For list of intervals returns list in increasing order:
+    inverts for '-' chain
+    """
+    start = values[0][0].inf
+    last_start = values[-1][0].inf
+    if start > last_start:
+        values = values[::-1]
+    return values
