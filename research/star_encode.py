@@ -65,12 +65,12 @@ with open(input_name, 'r') as input_file:
         cigar2 = line_list[13]
         print 'Length of chim junction %i' % (donor_ss-acceptor_ss)
         if chain == '+':
-            if donor_ss < acceptor_ss:
+            if donor_ss < acceptor_ss or abs(donor_ss - acceptor_ss) > 1000000:
                 print 'Not chimeric? ', donor_ss, acceptor_ss
                 mates['non-chim'] += 1
                 continue
         elif chain == '-':
-            if donor_ss > acceptor_ss:
+            if donor_ss > acceptor_ss or abs(donor_ss - acceptor_ss) > 1000000:
                 print 'Not chimeric? ', donor_ss, acceptor_ss
                 mates['non-chim'] += 1
                 continue

@@ -262,3 +262,10 @@ def order_interval_list(values):
     if start > last_start:
         values = values[::-1]
     return values
+
+
+def interval_to_string(i):
+    """
+    i is interval object with length 1
+    """
+    return str([str(int(i[0].inf)), str(int(i[0].sup))])

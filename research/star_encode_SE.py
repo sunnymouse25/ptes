@@ -13,7 +13,7 @@ import argparse
 from ptes.constants import PTES_logger
 from ptes.lib.general import init_file, writeln_to_file
 from ptes.ptes import annot_junctions, \
-    mate_intersection, return_mates, get_read_interval, dict_to_interval, one_interval
+    mate_intersection, get_read_interval, dict_to_interval, one_interval, interval_to_string
 
 # from Bio import SeqIO
 # from Bio.SeqRecord import SeqRecord
@@ -75,7 +75,9 @@ input_name = args.input
 path_to_file = args.output.rstrip('/')
 outside_name = 'mate_outside.junction'
 outside_list = []
+outside_intervals = 'mate_outside.test'
 init_file(outside_name, folder = path_to_file)
+init_file(outside_intervals, folder = path_to_file)
 annot_donors = 0
 annot_acceptors = 0
 mates = {'inside': 0, 'outside': 0, 'non-chim' : 0}
@@ -96,11 +98,11 @@ with open(input_name, 'r') as input_file:
         cigar2 = line_list[13]
         read_names_set.add(read_name)
         if chain == '+':
-            if donor_ss < acceptor_ss:
+            if donor_ss < acceptor_ss or abs(donor_ss - acceptor_ss) > 1000000:
                 mates['non-chim'] += 1
                 continue
         elif chain == '-':
-            if donor_ss > acceptor_ss:
+            if donor_ss > acceptor_ss or abs(donor_ss - acceptor_ss) > 1000000:
                 mates['non-chim'] += 1
                 continue
         chim_part1 = get_read_interval(cigar=cigar1, leftpos=coord1)
@@ -116,6 +118,13 @@ with open(input_name, 'r') as input_file:
                 mates[interval_intersection] += 1
                 if interval_intersection == 'outside':
                     outside_list.append(line)
+                    with open(outside_intervals, 'a') as test_file:
+                        test_file.write(read_name + '\n')
+                        test_file.write(line)
+                        test_file.write(interval_to_string(i=mate1)+ '\n')
+                        test_file.write(interval_to_string(i=mate2)+ '\n')
+                        test_file.write(' '.join(mate.items())+ '\n')
+                        test_file.write('\n')
                 if donor_ss in gtf_donors:
                     annot_donors += 1
                 if acceptor_ss in gtf_acceptors:
