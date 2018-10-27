@@ -16,13 +16,13 @@ ENCFF126QEZ
 
 from ptes.lib.general import init_file, writeln_to_file, shell_call
 
-bam_folder = '/uge_mnt/home/dp/ngs/encodedcc/hg19/ENCODE/'
-segemehl_bin = '/uge_mnt/home/sunnymouse/tools/segemehl_0_2_0/segemehl'        
+#bam_folder = '/uge_mnt/home/dp/ngs/encodedcc/hg19/ENCODE/'
+#segemehl_bin = '/uge_mnt/home/sunnymouse/tools/segemehl_0_2_0/segemehl'        
 
 for i, name in enumerate(file_str.split()):
     id = name.strip(None)                    
     folder_name = '/uge_mnt/home/sunnymouse/projects/PTES/ENCODE/%s' % id   #without end 
-    sh_filename = 'segemehl_%i.sh' % i    
+    sh_filename = 'star_%i.sh' % i    
     init_file(sh_filename)
     cmd_list = []
     cmd_list.append('#!/bin/bash -il \ncd %s \n' %  '/uge_mnt/home/sunnymouse/projects/PTES/ENCODE/')
