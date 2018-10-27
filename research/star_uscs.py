@@ -13,7 +13,7 @@ import pandas as pd
 
 from ptes.lib.general import init_file, writeln_to_file, shell_call
 from ptes.ptes import get_read_interval, one_interval, get_interval_length, split_by_p, order_interval_list
-from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder
+from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder, to_bigbed
 
 
 ### Arguments
@@ -139,7 +139,7 @@ for i, group in enumerate(groups):
         if i == 0:
             writeln_to_file('browser position %s:%i-%i\t' % window, info_name, folder = folder_name) 
 
-        
+to_bigbed(bed_name=bed_name)
         
         
         

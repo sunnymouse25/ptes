@@ -17,7 +17,7 @@ from ptes.lib.general import init_file, writeln_to_file, shell_call
 from ptes.ptes import annot_junctions, \
     mate_intersection, get_read_interval, dict_to_interval, one_interval, \
     interval_to_string, get_interval_length
-from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder
+from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder, to_bigbed
 
 
 ### Arguments
@@ -230,6 +230,7 @@ try:
         description = "%i\t%i" % (value.inside, value.outside)
         writeln_to_file('browser position %s:%i-%i\t' % window + description, coord_name, folder=folder_name)
 
+    to_bigbed(bed_name=bed_name)
 
     PTES_logger.info('Creating reads dataframe... done')
 except KeyError:
