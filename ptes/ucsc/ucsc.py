@@ -98,14 +98,15 @@ def make_bed_folder(folder_name, bed_name, coord_name, info_name, data_desc):
     bigDataUrl=https://github.com/sunnymouse25/ptes/blob/dev/research/bed/%s?raw=true' % (
     data_desc, bed_name.replace('.bed', '.bb')), info_name, folder=folder_name)
 
-def to_bigbed(bed_name):
-    real_path = os.path.realpath(bed_name)
-    dirname = os.path.dirname(real_path)
-    cmd1 = 'sort -k1,1 -k2,2n %s > %s/input.bed' % (real_path, dirname)
+def to_bigbed(bed_name, folder_name):
+    if folder_name[-1] != '/':
+        folder_name = folder_name + '/'
+    real_path = os.path.dirname(os.path.realpath(folder_name+bed_name))
+    cmd1 = 'sort -k1,1 -k2,2n %s/%s > %s/input.bed' % (real_path, bed_name, real_path)
     cmd2 = 'bedToBigBed \
             %s/input.bed \
             http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.chrom.sizes \
-            %s' % (dirname, real_path.rstrip('.bed')+'.bb')
+            %s/%s' % (real_path, real_path, bed_name.rstrip('.bed')+'.bb')
     cmds = [cmd1,cmd2]
     for cmd in cmds:
         shell_call(cmd)
