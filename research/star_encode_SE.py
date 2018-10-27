@@ -6,6 +6,7 @@
 # Imports
 from collections import defaultdict
 import argparse
+import random
 
 import pandas as pd
 import numpy as np
@@ -217,9 +218,10 @@ try:
         windows_min = []
         windows_max = []
         for chim1, chim2, nonchim in junc_dict[key]:
-            bed1 = get_track_list(chrom, chain, chim1, name='chim_part1', color='r')
-            bed2 = get_track_list(chrom, chain, chim2, name='chim_part2', color='r')
-            bed3 = get_track_list(chrom, chain, nonchim, name='mate2', color='b')
+            num = random.randint(100,999)
+            bed1 = get_track_list(chrom, chain, chim1, name='%i_chim_part1' % num, color='r')
+            bed2 = get_track_list(chrom, chain, chim2, name='%i_chim_part2' % num, color='r')
+            bed3 = get_track_list(chrom, chain, nonchim, name='%i_mate2' % num, color='b')
             for track_list in [bed1, bed2, bed3]:
                 windows_min.append(int(track_list[1]))  # track_list[1] is chromStart, track_list[2] is chromEnd
                 windows_max.append(int(track_list[2]))
@@ -228,7 +230,7 @@ try:
                   min(windows_min) - 200,
                   max(windows_max) + 200)
         description = "%i\t%i" % (value.inside, value.outside)
-        writeln_to_file('browser position %s:%i-%i\t' % window + description, coord_name, folder=folder_name)
+        writeln_to_file('%s:%i-%i\t' % window + description, coord_name, folder=folder_name)
 
     to_bigbed(bed_name=bed_name)
 

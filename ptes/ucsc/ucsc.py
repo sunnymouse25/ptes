@@ -77,7 +77,8 @@ def make_bed_folder(folder_name, bed_name, coord_name, info_name, data_desc):
     :return: ./bed subfolder, BED file for track lines, table with windows to copy-paste, track file for GB
     """
 
-    os.makedirs(folder_name)
+    cmd1 = 'if [ ! -d %s ]; then mkdir %s; fi' % (folder_name, folder_name)
+    shell_call(cmd1)
     init_file(bed_name, folder=folder_name)
     init_file(coord_name, folder=folder_name)
     init_file(info_name, folder=folder_name)
