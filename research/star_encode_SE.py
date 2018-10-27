@@ -232,7 +232,7 @@ try:
         description = "%i\t%i" % (value.inside, value.outside)
         writeln_to_file('%s:%i-%i\t' % window + description, coord_name, folder=folder_name)
 
-    to_bigbed(bed_name=bed_name, folder = folder_name)
+    to_bigbed(bed_name=bed_name, folder_name = folder_name)
 
     PTES_logger.info('Creating reads dataframe... done')
 except KeyError:
