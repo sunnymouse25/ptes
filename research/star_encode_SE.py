@@ -17,6 +17,7 @@ from ptes.lib.general import init_file, writeln_to_file, shell_call
 from ptes.ptes import annot_junctions, \
     mate_intersection, get_read_interval, dict_to_interval, one_interval, \
     interval_to_string, get_interval_length
+from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder
 
 
 ### Arguments
@@ -81,22 +82,18 @@ with open(sam_name, 'rb') as input_file:
             'NH' : nh,
         }
         sam_dict[read_name].append(sam_attrs)
-
 PTES_logger.info('Reading STAR non-chimeric output... done')
 
 # Reading filtered STAR output
 PTES_logger.info('Reading STAR chimeric output...')
 input_name = args.input
 path_to_file = args.output.rstrip('/')
-outside_name = 'mate_outside.junction'
-outside_list = []
-outside_intervals = 'mate_outside.test'
-init_file(outside_name, folder = path_to_file)
-init_file(outside_intervals, folder = path_to_file)
+
 annot_donors = 0
 annot_acceptors = 0
 mates = {'inside': 0, 'outside': 0, 'non-chim' : 0}
 read_names_list = []
+junc_dict = defaultdict(list)
 
 with open(input_name, 'rb') as input_file:
     for line in input_file:
@@ -148,9 +145,11 @@ with open(input_name, 'rb') as input_file:
                 if nh_chroms > 1:
                     continue
             if mate['chrom'] == chrom and mate['chain'] != chain:
-                mate2 = one_interval(dict_to_interval(get_read_interval(cigar=mate['cigar'], leftpos=mate['leftpos'])))
+                mate2_dict = get_read_interval(cigar=mate['cigar'], leftpos=mate['leftpos'])
+                mate2 = one_interval(dict_to_interval(mate2_dict))
                 interval_intersection = mate_intersection(mate1, mate2)
                 mates[interval_intersection] += 1
+                junc_dict[(chrom, chain, donor_ss, acceptor_ss)].append((chim_part1, chim_part2, mate2_dict))
                 if interval_intersection == 'outside':
                     mate_dist = int(min(
                         abs(mate1[0].inf-mate2[0].sup),
@@ -172,15 +171,6 @@ with open(input_name, 'rb') as input_file:
                     'type' : interval_intersection,
                     }
                 read_names_list.append(read_attrs)
-                if interval_intersection == 'outside':
-                    outside_list.append(line)
-                    with open('%s/%s' % (path_to_file, outside_intervals), 'ab') as test_file:
-                        test_file.write(read_name + b'\n')
-                        test_file.write(line)
-                        test_file.write(bytes(interval_to_string(i=mate1))+ b'\n')
-                        test_file.write(bytes(interval_to_string(i=mate2))+ b'\n')
-                        test_file.write(b' '.join(map(str,list(mate.values())))+ b'\n')
-                        test_file.write(b'\n')
 
 
 PTES_logger.info('Reading STAR chimeric output... done')
@@ -191,19 +181,59 @@ print 'Intron too large: %i' % mates['non-chim']
 print 'Annot donors: %i' % annot_donors
 print 'Annot acceptors: %i' % annot_acceptors
 
-writeln_to_file(b''.join(outside_list), outside_name, folder = path_to_file)
-
 PTES_logger.info('Creating reads dataframe...')
 
 chim_junc_df = pd.DataFrame(read_names_list)
-chim_junc_df = chim_junc_df[['read_name', 'chrom', 'chain',
+try:
+    chim_junc_df = chim_junc_df[['read_name', 'chrom', 'chain',
                              'donor', 'acceptor', 'annot_donor',
                              'annot_acceptor', 'consensus',
                              'chim_dist', 'mate_dist', 'type']].sort_values(by='read_name').reset_index(drop=True)
-chim_junc_df.to_csv('%s/chim_junc_df.csv' % path_to_file, sep = '\t')
-x = chim_junc_df.groupby(['chrom', 'chain', 'donor','acceptor','type']).size()
+    chim_junc_df.to_csv('%s/chim_junc_df.csv' % path_to_file, sep='\t')
+    df_new = chim_junc_df.query('consensus=="GT/AG" & chim_dist < 10000 & mate_dist < 10000')
+    z = df_new.groupby(['chrom', 'chain', 'donor', 'acceptor', 'type']).size().reset_index(name='counts')
+    zz = z.pivot_table(index=['chrom', 'chain', 'donor', 'acceptor'], columns=['type'], values='counts', fill_value=0)
+    zz['all'] = zz.inside + zz.outside
+    zz = zz.sort_values(by='all', ascending=False)
+    zz.to_csv('%s/chim_types.csv' % path_to_file, sep='\t')
 
-PTES_logger.info('Creating reads dataframe... done')
+    PTES_logger.info('Making BED files...')
+
+    bed_name = '%s.bed' % args.tag  # only track lines
+    coord_name = '%s.coords.csv' % args.tag  # table with windows to paste into GB and with descriptions
+    info_name = '%s.track' % args.tag  # file to submit to GB
+    folder_name = '%s/bed/' % path_to_file
+    make_bed_folder(folder_name=folder_name,
+                    bed_name=bed_name,
+                    coord_name=coord_name,
+                    info_name=info_name,
+                    data_desc=args.tag)
+
+    writeln_to_file('#window\tinside\toutside', coord_name, folder=folder_name)
+
+    for key, value in zz.iterrows():
+        chrom = key[0]
+        chain = key[1]
+        windows_min = []
+        windows_max = []
+        for chim1, chim2, nonchim in junc_dict[key]:
+            bed1 = get_track_list(chrom, chain, chim1, name='chim_part1', color='r')
+            bed2 = get_track_list(chrom, chain, chim2, name='chim_part2', color='r')
+            bed3 = get_track_list(chrom, chain, nonchim, name='mate2', color='b')
+            for track_list in [bed1, bed2, bed3]:
+                windows_min.append(int(track_list[1]))  # track_list[1] is chromStart, track_list[2] is chromEnd
+                windows_max.append(int(track_list[2]))
+                writeln_to_file('\t'.join(track_list), bed_name, folder=folder_name)
+        window = (chrom,
+                  min(windows_min) - 200,
+                  max(windows_max) + 200)
+        description = "%i\t%i" % (value.inside, value.outside)
+        writeln_to_file('browser position %s:%i-%i\t' % window + description, coord_name, folder=folder_name)
+
+
+    PTES_logger.info('Creating reads dataframe... done')
+except KeyError:
+    PTES_logger.warning('Creating reads dataframe... empty dataframe')
 
 
 

@@ -1,6 +1,8 @@
 from collections import OrderedDict
+import os
 
 from ptes.ptes import get_interval_length
+from ptes.lib.general import init_file, writeln_to_file
 
 
 def list_to_dict(lst):
@@ -62,3 +64,35 @@ def get_track_list(chrom, chain, read_dict, name = 'sim_read', color = 'r'):
     track_list.append(','.join(map(str,blockSizes)))         # blockSizes
     track_list.append(','.join(map(str,chromStarts)))        # chromStarts
     return map(str, track_list)
+
+
+def make_bed_folder(folder_name, bed_name, coord_name, info_name, data_desc):
+    """
+    Initiates 3 files essential for Genome Browser
+    :param folder_name: ./bed subfolder
+    :param bed_name: only track lines
+    :param coord_name: table with windows to paste into GB and with descriptions
+    :param info_name: file to submit to GB
+    :param data_desc: description for the whole dataset
+    :return: ./bed subfolder, BED file for track lines, table with windows to copy-paste, track file for GB
+    """
+
+    os.makedirs(folder_name)
+    init_file(bed_name, folder=folder_name)
+    init_file(coord_name, folder=folder_name)
+    init_file(info_name, folder=folder_name)
+
+    writeln_to_file('browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac', info_name, folder=folder_name)
+    writeln_to_file(
+        'browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3',
+        info_name,
+        folder=folder_name
+    )
+    writeln_to_file('browser pack gtexGene', info_name, folder=folder_name)
+    writeln_to_file('track type=bigBed \
+                    name="%s" \
+                    description="bigBed" \
+                    visibility=2 \
+                    itemRgb="On" \
+    bigDataUrl=https://github.com/sunnymouse25/ptes/blob/dev/research/bed/%s?raw=true' % (
+    data_desc, bed_name.replace('.bed', '.bb')), info_name, folder=folder_name)

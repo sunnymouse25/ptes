@@ -83,13 +83,13 @@ for i, name in enumerate(file_str.split()):
     cmd_list.append('mkdir %s/mate2' % folder_name)    
     cmd_list.append('python star_encode_SE.py \
                     -i %s/mate1_Chimeric.out.junction.filtered\
-                    -s %s/mate1_Aligned.out.sam \
+                    -s %s/mate2_Aligned.out.sam \
                     -o %s/mate1\
                     -g /home/sunnymouse/Human_ref/GRCh37.p13.genome.fa\
                     -gtf /home/sunnymouse/Human_ref/hg19_exons.gtf' % (folder_name, folder_name, folder_name))    
     cmd_list.append('python star_encode_SE.py \
                     -i %s/mate2_Chimeric.out.junction.filtered \
-                    -s %s/mate2_Aligned.out.sam.sam \
+                    -s %s/mate1_Aligned.out.sam \
                     -o %s/mate2\
                     -g /home/sunnymouse/Human_ref/GRCh37.p13.genome.fa\
                     -gtf /home/sunnymouse/Human_ref/hg19_exons.gtf' % (folder_name, folder_name, folder_name))    

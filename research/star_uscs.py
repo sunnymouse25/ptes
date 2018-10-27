@@ -13,7 +13,7 @@ import pandas as pd
 
 from ptes.lib.general import init_file, writeln_to_file, shell_call
 from ptes.ptes import get_read_interval, one_interval, get_interval_length, split_by_p, order_interval_list
-from ptes.ucsc.ucsc import list_to_dict, get_track_list
+from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder
 
 
 ### Arguments
@@ -61,32 +61,20 @@ input_name = args.input
 output_prefix = args.output
 desc = args.description
 
+
 dirname = os.path.dirname(os.path.realpath(input_name))
 if dirname == '':
     dirname = '.'
 
+bed_name = '%s.bed' % desc  # only track lines
+coord_name = '%s.coords.csv' % desc  # table with windows to paste into GB and with descriptions
+info_name = '%s.track' % desc  # file to submit to GB
 folder_name = '%s/bed/' % dirname
-cmd = 'if [ ! -d %s ]; then mkdir %s; fi' % (folder_name, folder_name)    
-shell_call(cmd)
-    
-bed_name = '%s.bed' % output_prefix
-coord_name = '%s.coords.csv' % output_prefix
-info_name = '%s.track' % output_prefix
-init_file(bed_name, folder = folder_name)
-init_file(coord_name, folder = folder_name)
-init_file(info_name, folder = folder_name)
-
-writeln_to_file('browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac', info_name, folder = folder_name)
-writeln_to_file('browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3', 
-                info_name, 
-                folder = folder_name)
-writeln_to_file('browser pack gtexGene', info_name, folder = folder_name)
-writeln_to_file('track type=bigBed \
-                name="%s" \
-                description="bigBed" \
-                visibility=2 \
-                itemRgb="On" \
-bigDataUrl=https://github.com/sunnymouse25/ptes/blob/dev/research/bed/%s?raw=true' % (desc, bed_name.replace('.bed', '.bb')), info_name, folder = folder_name)
+make_bed_folder(folder_name=folder_name,
+                bed_name=bed_name,
+                coord_name=coord_name,
+                info_name=info_name,
+                data_desc=desc)
 
 # start processing input file
 input_df = pd.read_csv(input_name, sep='\t', header=None, dtype=str)
@@ -121,7 +109,7 @@ for i, group in enumerate(groups):
             chim_part2 = get_read_interval(cigar2, coord2)            
             bed1 = get_track_list(chrom, chain, mate1, name='mate1', color='r')
             bed2 = get_track_list(chrom, chain, mate2, name='mate2', color='r')
-            bed3 = get_track_list(chrom, chain, chim_part2, name='chim', color='r')
+            bed3 = get_track_list(chrom, chain, chim_part2, name='chim_mate2', color='r')
             track_lists = [bed1, bed2, bed3]
         elif 'p' in cigar2:
             mate1 = get_read_interval(cigar2.split('p')[0].rstrip('-0123456789'), coord2)
@@ -129,7 +117,7 @@ for i, group in enumerate(groups):
             chim_part2 = get_read_interval(cigar1, coord1)
             bed1 = get_track_list(chrom, chain, mate1, name='mate1', color='r')
             bed2 = get_track_list(chrom, chain, mate2, name='mate2', color='r')
-            bed3 = get_track_list(chrom, chain, chim_part2, name='chim', color='r')
+            bed3 = get_track_list(chrom, chain, chim_part2, name='chim_mate1', color='r')
             track_lists = [bed1, bed2, bed3]
         else:   #single-read mode
             chim_part1 = get_read_interval(cigar1, coord1)   # not mates, chimeric parts!
