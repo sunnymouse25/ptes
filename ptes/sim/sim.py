@@ -9,7 +9,7 @@ from ptes.ptes import get_read_interval, get_interval_length, one_interval, sort
 from ptes.lib.general import init_file, writeln_to_file, shell_call, worker
 
 
-def read_coord(intervals, infos, read_name, cigar, leftpos, XI, XQ, chrom, flag):
+def read_coord(intervals, infos, read_name, cigar, leftpos, NH, XI, XQ, chrom, flag):
     xq = int(XQ)
     if flag & 16 == 0:
         chain = '+'
