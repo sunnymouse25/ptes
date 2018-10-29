@@ -9,7 +9,7 @@ from ptes.ptes import get_read_interval, get_interval_length, one_interval, sort
 from ptes.lib.general import init_file, writeln_to_file, shell_call, worker
 
 
-def read_coord(intervals, infos, read_name, cigar, leftpos, NH, XI, XX, XY, XQ, chrom, flag):
+def read_coord(intervals, infos, read_name, cigar, leftpos, XI, XQ, chrom, flag, **kwargs):
     xq = int(XQ)
     if flag & 16 == 0:
         chain = '+'
@@ -46,12 +46,10 @@ def segemehl_to_intervals(segemehl_outfile):
                         tags[tag] = elm
             sam_attrs.update(tags)
             sam_attrs['NH'] = sam_attrs['NH'].strip('NH:i:')
-            if sam_attrs['NH'] != '1':
-                continue   # unique mappings only
             sam_attrs['XI'] = sam_attrs['XI'].strip('XI:i:')
             if sam_attrs['XQ']:
                 sam_attrs['XQ'] = sam_attrs['XQ'].strip('XQ:i:')
-                read_coord(read_intervals, read_infos, **sam_attrs)
+                read_coord(intervals=read_intervals, infos=read_infos, **sam_attrs)
     return read_intervals, read_infos
 
 

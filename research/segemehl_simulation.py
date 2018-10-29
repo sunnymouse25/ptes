@@ -85,14 +85,14 @@ gr = mapped_junc_df.groupby(['read_name','aln']).apply(lambda x: x.chimeric.any(
 del gr['aln']
 mapped_junc_df = pd.merge(mapped_junc_df, gr, on='read_name').reset_index(drop=True)
 mapped_junc_df['tag'] = args.tag   # ENCODE id for grouping results
-mapped_junc_df.to_csv('%s/mapped_junc_df_segemehl.csv' % path_to_file, sep = '\t', compression='gzip')
+mapped_junc_df.to_csv('%s/mapped_junc_df_segemehl.csv.gz' % path_to_file, sep = '\t', compression='gzip')
 
 PTES_logger.info('Creating junctions table... done')
 
 PTES_logger.info('Comparing mapped junctions with real junctions...')
 params_list = []
 junc_df_list = mp.Manager().list()
-file_prefix = '/uge_mnt/home/sunnymouse/projects/PTES/Single-read/read_simulation/remap_sjdb/'
+file_prefix = '/home/sunnymouse/projects/PTES/Single-read/read_simulation/remap_sjdb/'
 
 for junc_df in pd.read_csv(file_prefix + 'junc_df_detected.csv', sep='\t', index_col=0, chunksize=1000):
     params_list.append({'function': get_detected,
