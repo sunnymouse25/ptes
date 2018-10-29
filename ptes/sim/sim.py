@@ -64,12 +64,12 @@ def intervals_to_junctions(read_intervals, read_infos, gtf_donors, gtf_acceptors
             infos = read_infos[key][str(xi)]
             chroms = set(infos[::2])
             chains = set(infos[1::2])
+            xi += 1
             if len(chroms) == 1 and len(chains) == 1:  # read must be mapped to the same chrom and chain
                 chrom = chroms.pop()
                 if chrom.startswith('chr'):  # skip contigs
                     chain = chains.pop()
                     values = sort_by_xq(tuples=tuples, chain=chain)
-                    xi += 1
                     if len(values) > 0:  # should be every read, just to be sure
                         attrs = {'read_name': key,
                                 'aln': xi-1}
