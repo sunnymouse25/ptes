@@ -184,12 +184,111 @@ class TestPtes(unittest.TestCase):
             self.assertEqual((mate1,mate2), exp_mates[i])
             print ptes.mate_intersection(mate1, mate2)
 
-
-    def test_order_interval_list(self):
+    def test_sort_by_xq(self):
         interval_lists = [
-            [interval([1000.0, 4349.0]), interval([4000.0, 4099.0])],
-            [interval([1000.0, 4349.0]), interval([4000.0, 4099.0]), interval([3050.0, 3149.0])],
+            [(0, interval([4300.0, 4349.0])), (1,interval([4000.0, 4099.0]))],  # + chim
+            [(0, interval([4300.0, 4349.0])), (1,interval([4000.0, 4099.0]))],  # - non-chim
+            [(0, interval([3050.0, 3149.0])), (1,interval([4000.0, 4099.0]))],  # + non-chim
+            [(0, interval([3050.0, 3149.0])), (1,interval([4000.0, 4099.0]))],  # - chim
         ]
+        chains = [
+            '+',
+            '-',
+            '+',
+            '-',
+        ]
+        exp_lists = [
+            [interval([4300.0, 4349.0]), interval([4000.0, 4099.0])],
+            [interval([4000.0, 4099.0]), interval([4300.0, 4349.0])],
+            [interval([3050.0, 3149.0]), interval([4000.0, 4099.0])],
+            [interval([4000.0, 4099.0]), interval([3050.0, 3149.0])],
+        ]
+        for i, tuple in enumerate(interval_lists):
+            res_list = ptes.sort_by_xq(tuple, chains[i])
+            self.assertEqual(exp_lists[i], res_list)
+
+
+    def test_get_junctions(self):
+        chrom = 'chr1'
+        gtf_donors = {'chr1': {1, 2, 3}}
+        gtf_acceptors = {'chr1': {1, 2, 3}}
+        values = [
+            [interval([4300.0, 4349.0]), interval([4000.0, 4099.0])],  # + chim
+            [interval([4000.0, 4099.0]), interval([4300.0, 4349.0])],  # - non-chim
+            [interval([3050.0, 3149.0]), interval([4000.0, 4099.0])],  # + non-chim
+            [interval([4000.0, 4099.0]), interval([3050.0, 3149.0])],  # - chim
+            [interval([74598831.0, 74598855.0]), interval([74601450.0, 74601467.0]),  # + 1324
+             interval([74600055.0, 74600075.0]), interval([74603869.0, 74603880.0])],
+        ]
+        chains = [
+            '+',
+            '-',
+            '+',
+            '-',
+            '+',
+        ]
+        exp_lists = [
+            [{'n_junctions': 1,
+             'chrom': 'chr1',
+             'chain': '+',
+             'donor': str(4350),
+             'annot_donor': 0,
+             'acceptor': str(3999),
+             'annot_acceptor': 0,
+             'chimeric': True}],
+            [{'n_junctions': 1,
+              'chrom': 'chr1',
+              'chain': '-',
+              'donor': str(4299),
+              'annot_donor': 0,
+              'acceptor': str(4100),
+              'annot_acceptor': 0,
+              'chimeric': False}],
+            [{'n_junctions': 1,
+              'chrom': 'chr1',
+              'chain': '+',
+              'donor': str(3150),
+              'annot_donor': 0,
+              'acceptor': str(3999),
+              'annot_acceptor': 0,
+              'chimeric': False}],
+            [{'n_junctions': 1,
+              'chrom': 'chr1',
+              'chain': '-',
+              'donor': str(3049),
+              'annot_donor': 0,
+              'acceptor': str(4100),
+              'annot_acceptor': 0,
+              'chimeric': True}],
+            [{'n_junctions': 3,
+              'chrom': 'chr1',
+              'chain': '+',
+              'donor': str(74598856),
+              'annot_donor': 0,
+              'acceptor': str(74601449),
+              'annot_acceptor': 0,
+              'chimeric': False},
+             {'n_junctions': 3,
+              'chrom': 'chr1',
+              'chain': '+',
+              'donor': str(74601468),
+              'annot_donor': 0,
+              'acceptor': str(74600054),
+              'annot_acceptor': 0,
+              'chimeric': True},
+             {'n_junctions': 3,
+              'chrom': 'chr1',
+              'chain': '+',
+              'donor': str(74600076),
+              'annot_donor': 0,
+              'acceptor': str(74603868),
+              'annot_acceptor': 0,
+              'chimeric': False},
+             ],
+        ]
+        for i, value in enumerate(values):
+            res_list = ptes.get_junctions(chrom, chains[i], value, gtf_donors, gtf_acceptors)
+            self.assertListEqual(exp_lists[i], res_list)
 
 
 if __name__ == "__main__":

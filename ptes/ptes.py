@@ -252,20 +252,73 @@ def split_by_chimeric(lst):
     return [lst]
 
 
-def order_interval_list(values):
+def interval_to_string(i):
     """
-    For list of intervals returns list in increasing order:
-    inverts for '-' chain
+    Useful for writing intervals to file
+    :param i: i is interval object with length 1
+    :return: string interpretation of given interval
     """
-    start = values[0][0].inf
-    last_start = values[-1][0].inf
-    if start > last_start:
+    return str([str(int(i[0].inf)), str(int(i[0].sup))])
+
+
+def sort_by_xq(tuples, chain):
+    """
+    Takes value from read_intervals dictionary
+    Example for value: [(0,A), (1,B), (2,C)],
+    where A,B,C are M-intervals of non-chim read
+    Chain + 5'-3' A-B-C
+    Chain - 5'-3' C-B-A
+    Makes list of M-intervals in the order as they are in the read,
+    but from 5' to 3', as in STAR Chimeric.out.junction
+    :param tuples: example for chain -
+    [(0, interval([74603869.0, 74603880.0])),
+     (1, interval([74600055.0, 74600075.0])),]
+    :param chain: if chain == '-' than their order is from 3' to 5'
+    :return: list of M-intervals in the ascending order 5'-3'
+    """
+    tuples = sorted(tuples, key=lambda x: x[0])  # sort by xq
+    values = [i[1] for i in tuples]  # get rid of xq
+    if chain == '-':
         values = values[::-1]
     return values
 
 
-def interval_to_string(i):
+def get_junctions(chrom, chain, values, gtf_donors, gtf_acceptors):
     """
-    i is interval object with length 1
+    From list of segemehl M-intervals to junctions
+    :param chrom: chromosome
+    :param chain: chain relative to genome
+    :param values: sorted by xq list of M-intervals ordered from 5' to 3'
+    :param gtf_donors: dictionary with chromosomes as keys, sets of ints as values
+    :param gtf_acceptors: same as gtf_donors, output of annot_junction function
+    :return: list of dictionaries with coordinates of junctions, ready to make pandas dataframe
     """
-    return str([str(int(i[0].inf)), str(int(i[0].sup))])
+    n_j = len(values) - 1
+    junc_list = []  # from mapped read intervals to the list of junctions
+    for i in range(1, len(values)):
+        donor_ss = np.nan
+        acceptor_ss = np.nan
+        chimeric = False
+        if chain == '+':
+            donor_ss = int(values[i-1][0].sup) + 1
+            acceptor_ss = int(values[i][0].inf) - 1
+            if donor_ss > acceptor_ss:
+                chimeric = True
+        elif chain == '-':
+            donor_ss = int(values[i][0].inf) - 1
+            acceptor_ss = int(values[i-1][0].sup) + 1
+            if donor_ss < acceptor_ss:
+                chimeric = True
+        donors = gtf_donors[chrom]
+        acceptors = gtf_acceptors[chrom]
+        annot_donor = 1 if donor_ss in donors else 0
+        annot_acceptor = 1 if acceptor_ss in acceptors else 0
+        junc_list.append({'n_junctions': n_j,
+                'chrom': chrom,
+                'chain': chain,
+                'donor': str(donor_ss),
+                'annot_donor': annot_donor,
+                'acceptor': str(acceptor_ss),
+                'annot_acceptor': annot_acceptor,
+                'chimeric': chimeric})
+    return junc_list

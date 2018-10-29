@@ -176,11 +176,11 @@ with open(input_name, 'rb') as input_file:
 
 PTES_logger.info('Reading STAR chimeric output... done')
 
-print 'Inside: %i' % mates['inside']
-print 'Outside: %i' % mates['outside']
-print 'Intron too large: %i' % mates['non-chim']
-print 'Annot donors: %i' % annot_donors
-print 'Annot acceptors: %i' % annot_acceptors
+PTES_logger.info('Inside: %i' % mates['inside'])
+PTES_logger.info('Outside: %i' % mates['outside'])
+PTES_logger.info('Intron too large: %i' % mates['non-chim'])
+PTES_logger.info('Annot donors: %i' % annot_donors)
+PTES_logger.info('Annot acceptors: %i' % annot_acceptors)
 
 PTES_logger.info('Creating reads dataframe...')
 
@@ -192,11 +192,13 @@ try:
                              'chim_dist', 'mate_dist', 'type']].sort_values(by='read_name').reset_index(drop=True)
     chim_junc_df.to_csv('%s/chim_junc_df.csv' % path_to_file, sep='\t')
     df_new = chim_junc_df.query('consensus=="GT/AG" & chim_dist < 10000 & mate_dist < 10000')
-    z = df_new.groupby(['chrom', 'chain', 'donor', 'acceptor', 'type']).size().reset_index(name='counts')
+    df_new['annot'] = df_new.annot_acceptor + df_new.annot_donor
+    z = df_new.groupby(['chrom', 'chain', 'donor', 'acceptor', 'type', 'annot']).size().reset_index(name='counts')
     zz = z.pivot_table(index=['chrom', 'chain', 'donor', 'acceptor'], columns=['type'], values='counts', fill_value=0)
     zz['all'] = zz.inside + zz.outside
     zz = zz.sort_values(by='all', ascending=False)
     zz.to_csv('%s/chim_types.csv' % path_to_file, sep='\t')
+    annot_table = z.pivot_table(index=['chrom', 'chain', 'donor', 'acceptor'], values='annot')
 
     PTES_logger.info('Making BED files...')
 
@@ -210,7 +212,7 @@ try:
                     info_name=info_name,
                     data_desc=args.tag)
 
-    writeln_to_file('#window\tinside\toutside', coord_name, folder=folder_name)
+    writeln_to_file('\t'.join(['#window','inside','outside']), coord_name, folder=folder_name)
 
     for key, value in zz.iterrows():
         chrom = key[0]
@@ -229,7 +231,7 @@ try:
         window = (chrom,
                   min(windows_min) - 200,
                   max(windows_max) + 200)
-        description = "%i\t%i" % (value.inside, value.outside)
+        description = '\t'.join(map(str,[value.inside, value.outside, annot_table.loc[key].annot]))
         writeln_to_file('%s:%i-%i\t' % window + description, coord_name, folder=folder_name)
 
     to_bigbed(bed_name=bed_name, folder_name = folder_name)

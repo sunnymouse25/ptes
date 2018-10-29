@@ -22,7 +22,10 @@ parser.add_argument("-o","--output", type=str,
                     help="Output folder for results")  
 parser.add_argument("-g","--genome", type=str,
                     default = '/uge_mnt/home/sunnymouse/Human_ref/GRCh37.p13.genome.fa',    
-                    help="Absolute path to genome file")  
+                    help="Absolute path to genome file")
+parser.add_argument("-gtf","--gtf_annot", type=str,
+                    default = '/uge_mnt/home/sunnymouse/Human_ref/hg19_exons.gtf',
+                    help="Absolute path to genome file")
 parser.add_argument("-t","--tag", type=str,
                     help="Tag name for grouping results, i.e. ENCODE id")
 args = parser.parse_args()
@@ -33,7 +36,7 @@ args = parser.parse_args()
 # Exons GTF to junctions dict
 
 PTES_logger.info('Reading GTF...')
-gtf_exons_name = '/uge_mnt/home/sunnymouse/Human_ref/hg19_exons.gtf'
+gtf_exons_name = args.gtf_annot
 gtf_donors, gtf_acceptors = annot_junctions(gtf_exons_name=gtf_exons_name)
 
 PTES_logger.info('Reading GTF... done')  
@@ -63,15 +66,12 @@ with open(input_name, 'r') as input_file:
         cigar1 = line_list[11]
         coord2 = int(line_list[12])
         cigar2 = line_list[13]
-        print 'Length of chim junction %i' % (donor_ss-acceptor_ss)
         if chain == '+':
             if donor_ss < acceptor_ss or abs(donor_ss - acceptor_ss) > 1000000:
-                print 'Not chimeric? ', donor_ss, acceptor_ss
                 mates['non-chim'] += 1
                 continue
         elif chain == '-':
             if donor_ss > acceptor_ss or abs(donor_ss - acceptor_ss) > 1000000:
-                print 'Not chimeric? ', donor_ss, acceptor_ss
                 mates['non-chim'] += 1
                 continue
         mate1, mate2 = return_mates(cigar1=cigar1,
@@ -83,16 +83,16 @@ with open(input_name, 'r') as input_file:
         mates[interval_intersection] += 1
         if interval_intersection == 'outside':
             outside_list.append(line)
-        if donor_ss in gtf_donors:
+        if donor_ss in gtf_donors[chrom]:
             annot_donors += 1
-        if acceptor_ss in gtf_acceptors:            
+        if acceptor_ss in gtf_acceptors[chrom]:
             annot_acceptors += 1
 
 PTES_logger.info('Reading STAR output... done')  
-print 'Inside: %i' % mates['inside']
-print 'Outside: %i' % mates['outside']
-print 'Intron too large: %i' % mates['non-chim']
-print 'Annot donors: %i' % annot_donors
-print 'Annot acceptors: %i' % annot_acceptors   
+PTES_logger.info('Inside: %i' % mates['inside'])
+PTES_logger.info('Outside: %i' % mates['outside'])
+PTES_logger.info('Intron too large: %i' % mates['non-chim'])
+PTES_logger.info('Annot donors: %i' % annot_donors)
+PTES_logger.info('Annot acceptors: %i' % annot_acceptors)
 
 writeln_to_file(''.join(outside_list), outside_name, folder = path_to_file)   

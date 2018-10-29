@@ -4,7 +4,6 @@
 
 ### Arguments
 import argparse
-# Imports
 import os
 from collections import defaultdict
 
@@ -16,7 +15,7 @@ from interval import interval
 from ptes.constants import PTES_logger
 from ptes.lib.general import init_file, writeln_to_file, shell_call
 from ptes.ptes import get_read_interval, one_interval, get_subseq, annot_junctions, \
-    split_by_chimeric, order_interval_list
+    split_by_chimeric
 from ptes.ucsc.ucsc import list_to_dict, get_track_list
 
 parser = argparse.ArgumentParser()
@@ -98,7 +97,7 @@ PTES_logger.info('Reading GTF... done')
 # Mapped junctions table 
 PTES_logger.info('Creating junctions table...')           
 intervals_list = []   # to remember read intervals
-junc_list = []   # from mapped read intervals to list of junctions
+junc_list = []   # from mapped read intervals to the list of junctions
 
 for key in read_intervals:   # key is read_name    
     donor_ss = np.nan
@@ -107,7 +106,7 @@ for key in read_intervals:   # key is read_name
     while read_intervals[key].get(str(xi), None):   # xi - number of current read alignment                
         tuples = read_intervals[key][str(xi)]   # list of intervals of current read alignment    
         tuples = sorted(tuples, key=lambda x:x[0])   # sort by xq        
-        values =  [i[1] for i in tuples]   # get rid of xq
+        values = [i[1] for i in tuples]   # get rid of xq
         values = order_interval_list(values)   # ascending order is essential for BED lines
         n_j = len(values) - 1
         infos = read_infos[key][str(xi)]
@@ -133,15 +132,15 @@ for key in read_intervals:   # key is read_name
                             annot_acceptor = acceptor_ss in acceptors
                             chimeric = True if donor_ss > acceptor_ss else False
                             junc_list.append({'read_name' : key,
-                                                               'aln' : xi-1,
-                                                               'n_junctions' : n_j,                                
-                                                               'chrom' : chrom, 
-                                                               'chain' : chain,
-                                                               'donor' : str(donor_ss),
-                                                               'annot_donor' : annot_donor,
-                                                               'acceptor' : str(acceptor_ss),
-                                                               'annot_acceptor' : annot_acceptor,
-                                                               'chimeric' : chimeric}) 
+                                            'aln' : xi-1,
+                                            'n_junctions' : n_j,
+                                            'chrom' : chrom,
+                                            'chain' : chain,
+                                            'donor' : str(donor_ss),
+                                            'annot_donor' : annot_donor,
+                                            'acceptor' : str(acceptor_ss),
+                                            'annot_acceptor' : annot_acceptor,
+                                            'chimeric' : chimeric})
 
   
 mapped_junc_df = pd.DataFrame(junc_list)

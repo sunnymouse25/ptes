@@ -133,3 +133,6 @@ def leave_unique(edge_dict, return_copies=True):
         return unique_set, copies_dict
     else:
         return unique_set   
+
+def worker(kwargs):
+    kwargs['function'](**kwargs)
