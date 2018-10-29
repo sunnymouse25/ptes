@@ -116,6 +116,15 @@ true_map_df = pd.DataFrame.from_dict(true_map_dict, orient='index')
 true_map_df.columns = ['real', 'mapped']
 true_map_df['correct'] = True
 all_map_df = pd.concat([false_map_df, true_map_df])
-all_map_df.to_csv('all_map_df.csv', sep = '\t')
+all_map_df.to_csv('%s/all_map_df.csv' % path_to_file, sep = '\t')
+
+info_df = pd.merge(junc_df, all_map_df, left_on='read_name',right_index=True).reset_index(drop=True)
+del info_df['real']
+x = info_df.groupby(['n_junctions','mapped','correct']).apply(lambda x: x.read_name.nunique()).reset_index(name='counts')
+y = pd.pivot_table(x, index=['n_junctions','correct'], columns = ['mapped'],values=['counts'], fill_value=0, aggfunc=sum, margins=True)
+y.to_csv('%s/pivot_table.csv' % path_to_file, sep='\t')
+pivot_html_name = 'pivot_table.html'
+init_file(pivot_html_name, folder=path_to_file)
+writeln_to_file(y.to_html(), pivot_html_name, folder=path_to_file)
 
 PTES_logger.info('Comparing junctions table with real junctions... done')

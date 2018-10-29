@@ -46,6 +46,8 @@ def segemehl_to_intervals(segemehl_outfile):
                         tags[tag] = elm
             sam_attrs.update(tags)
             sam_attrs['NH'] = sam_attrs['NH'].strip('NH:i:')
+            if sam_attrs['NH'] != '1':
+                continue   # unique mappings only
             sam_attrs['XI'] = sam_attrs['XI'].strip('XI:i:')
             if sam_attrs['XQ']:
                 sam_attrs['XQ'] = sam_attrs['XQ'].strip('XQ:i:')
