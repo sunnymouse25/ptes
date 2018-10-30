@@ -7,6 +7,8 @@
 from collections import defaultdict
 import argparse
 import random
+import os
+import errno
 
 import pandas as pd
 import numpy as np
@@ -31,10 +33,10 @@ parser.add_argument("-s","--sam", type=str,
 parser.add_argument("-o","--output", type=str,
                     help="Output folder for results")
 parser.add_argument("-g","--genome", type=str,
-                    default = '/uge_mnt/home/sunnymouse/Human_ref/GRCh37.p13.genome.fa',
+                    default = '/home/sunnymouse/Human_ref/GRCh37.p13.genome.fa',
                     help="Absolute path to genome file")
 parser.add_argument("-gtf","--gtf_annot", type=str,
-                    default = '/uge_mnt/home/sunnymouse/Human_ref/hg19_exons.gtf',
+                    default = '/home/sunnymouse/Human_ref/hg19_exons.gtf',
                     help="Absolute path to genome file")
 parser.add_argument("-t","--tag", type=str,
                     default = 'ENCODE',
@@ -88,6 +90,12 @@ PTES_logger.info('Reading STAR non-chimeric output... done')
 # Reading filtered STAR output
 PTES_logger.info('Reading STAR chimeric output...')
 input_name = args.input
+try:
+    os.makedirs(args.output)
+except OSError as exc:
+    if exc.errno != errno.EEXIST:
+        raise
+    pass
 path_to_file = args.output.rstrip('/')
 
 annot_donors = 0
