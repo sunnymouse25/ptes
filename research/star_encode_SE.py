@@ -26,26 +26,28 @@ from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder, to_big
 ### Arguments
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-i","--input", type=str,
+parser.add_argument("-i", "--input", type=str,
                     help="STAR output, Chimeric.out.junction")
-parser.add_argument("-s","--sam", type=str,
+parser.add_argument("-s", "--sam", type=str,
                     help="Filtered STAR SAM output, with read_names same as in Chimeric.out.junction")
-parser.add_argument("-o","--output", type=str,
+parser.add_argument("-o", "--output", type=str,
                     help="Output folder for results")
-parser.add_argument("-g","--genome", type=str,
-                    default = '/home/sunnymouse/Human_ref/GRCh37.p13.genome.fa',
+parser.add_argument("-g", "--genome", type=str,
+                    default='/home/sunnymouse/Human_ref/GRCh37.p13.genome.fa',
                     help="Absolute path to genome file")
-parser.add_argument("-gtf","--gtf_annot", type=str,
-                    default = '/home/sunnymouse/Human_ref/hg19_exons.gtf',
+parser.add_argument("-gtf", "--gtf_annot", type=str,
+                    default='/home/sunnymouse/Human_ref/hg19_exons.gtf',
                     help="Absolute path to genome file")
-parser.add_argument("-t","--tag", type=str,
-                    default = 'ENCODE',
+parser.add_argument("-t", "--tag", type=str,
+                    default='ENCODE',
                     help="Tag name for grouping results, i.e. ENCODE id")
 args = parser.parse_args()
 
 # Functions
 
+# Main
 
+PTES_logger.info('Input file %s' % args.input)
 # Exons GTF to junctions dict
 
 PTES_logger.info('Reading GTF...')
@@ -79,10 +81,10 @@ with open(sam_name, 'rb') as input_file:
             chain = '-'
         sam_attrs = {
             'chain': chain,
-            'chrom' : chrom,
-            'leftpos' : leftpos,
-            'cigar' : cigar,
-            'NH' : nh,
+            'chrom': chrom,
+            'leftpos': leftpos,
+            'cigar': cigar,
+            'NH': nh,
         }
         sam_dict[read_name].append(sam_attrs)
 PTES_logger.info('Reading STAR non-chimeric output... done')
@@ -203,7 +205,11 @@ try:
     df_new['annot'] = df_new.annot_acceptor + df_new.annot_donor
     z = df_new.groupby(['chrom', 'chain', 'donor', 'acceptor', 'type', 'annot']).size().reset_index(name='counts')
     zz = z.pivot_table(index=['chrom', 'chain', 'donor', 'acceptor'], columns=['type'], values='counts', fill_value=0)
-    zz['all'] = zz.inside + zz.outside
+    if 'outside' in zz:
+        zz['all'] = zz.inside + zz.outside
+    else:
+        zz['outside'] = 0
+        zz['all'] = zz.inside
     zz = zz.sort_values(by='all', ascending=False)
     zz.to_csv('%s/chim_types.csv' % path_to_file, sep='\t')
     annot_table = z.pivot_table(index=['chrom', 'chain', 'donor', 'acceptor'], values='annot')

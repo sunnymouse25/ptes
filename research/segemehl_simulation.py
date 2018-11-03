@@ -8,10 +8,8 @@ import os
 import errno
 import multiprocessing as mp
 
-
 import numpy as np
 import pandas as pd
-
 
 from ptes.constants import PTES_logger
 from ptes.lib.general import init_file, writeln_to_file, shell_call, worker

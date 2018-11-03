@@ -1,16 +1,17 @@
 #Runs remapping of ENCODE data on CoBrain
  
-file_str ='''ENCFF670LIE
-ENCFF636QII
-ENCFF074BOV
-ENCFF486POD
-ENCFF887ZOX
-ENCFF148RNW
-ENCFF890WWJ
-ENCFF280XOG
-ENCFF064IOO
-ENCFF321CCY
-ENCFF126QEZ
+file_str ='''ENCFF849DPK
+ENCFF409KXZ
+ENCFF394YNR
+ENCFF054FHQ
+ENCFF720AGD
+ENCFF995FQE
+ENCFF045NDR
+ENCFF655YFM
+ENCFF703WLE
+ENCFF600VKV
+ENCFF445OEZ
+ENCFF040ZWV
 '''
 
 from ptes.lib.general import init_file, writeln_to_file, shell_call
@@ -86,13 +87,15 @@ for i, name in enumerate(file_str.split()):
                     -s %s/mate2_Aligned.out.sam \
                     -o %s/mate1\
                     -g /home/sunnymouse/Human_ref/GRCh37.p13.genome.fa\
-                    -gtf /home/sunnymouse/Human_ref/hg19_exons.gtf' % (folder_name, folder_name, folder_name))    
+                    -gtf /home/sunnymouse/Human_ref/hg19_exons.gtf\
+                    -t %s' % (folder_name, folder_name, folder_name, id))    
     cmd_list.append('python star_encode_SE.py \
                     -i %s/mate2_Chimeric.out.junction.filtered \
                     -s %s/mate1_Aligned.out.sam \
                     -o %s/mate2\
                     -g /home/sunnymouse/Human_ref/GRCh37.p13.genome.fa\
-                    -gtf /home/sunnymouse/Human_ref/hg19_exons.gtf' % (folder_name, folder_name, folder_name))    
+                    -gtf /home/sunnymouse/Human_ref/hg19_exons.gtf\
+                    -t %s' % (folder_name, folder_name, folder_name, id))    
         
     
     writeln_to_file('\n'.join(cmd_list), sh_filename)
