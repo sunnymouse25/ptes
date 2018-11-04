@@ -83,7 +83,7 @@ def make_bed_folder(folder_name, bed_name, coord_name, info_name, data_desc):
     init_file(coord_name, folder=folder_name)
     init_file(info_name, folder=folder_name)
 
-    writeln_to_file('browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac', info_name, folder=folder_name)
+    writeln_to_file('browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac rmsk', info_name, folder=folder_name)
     writeln_to_file(
         'browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3',
         info_name,

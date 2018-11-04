@@ -226,10 +226,10 @@ try:
                     info_name=info_name,
                     data_desc=args.tag)
 
-    writeln_to_file('\t'.join(['#window','inside','outside']), coord_name, folder=folder_name)
+    writeln_to_file('\t'.join(['#window', 'inside', 'outside', 'annot']), coord_name, folder=folder_name)
 
     for key, value in zz.iterrows():
-        chrom = key[0]
+        chrom = key[0]   # key is (chrom, chain, donor_ss, acceptor_ss)
         chain = key[1]
         windows_min = []
         windows_max = []
