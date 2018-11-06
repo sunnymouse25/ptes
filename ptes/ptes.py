@@ -185,7 +185,7 @@ def annot_junctions(gtf_exons_name):
     return gtf_donors, gtf_acceptors
 
 
-def dict_to_interval(read_dict):
+def dict_to_interval(read_dict, put_n = True, output='interval'):
     '''
     Takes read_dict (OrderedDict),
     returns interval of intervals for all features that consume reference
@@ -193,9 +193,16 @@ def dict_to_interval(read_dict):
     output_interval = interval()
     for item in read_dict.items():
         feature = item[0]
-        if 'M' in feature or 'D' in feature or 'N' in feature:
-            output_interval = output_interval | item[1]
-    return output_interval
+        if put_n:
+            if 'M' in feature or 'D' in feature or 'N' in feature:
+                output_interval = output_interval | item[1]
+        else:
+            if 'M' in feature or 'D' in feature:
+                output_interval = output_interval | item[1]
+    if output == 'interval':
+        return output_interval
+    if output == 'list':
+        return [x for x in output_interval.components]
 
 
 def mate_intersection(interval1, interval2):
