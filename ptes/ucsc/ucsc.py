@@ -102,11 +102,11 @@ def to_bigbed(bed_name, folder_name):
     if folder_name[-1] != '/':
         folder_name = folder_name + '/'
     real_path = os.path.dirname(os.path.realpath(folder_name+bed_name))
-    cmd1 = 'sort -k1,1 -k2,2n %s/%s > %s/input.bed' % (real_path, bed_name, real_path)
+    cmd1 = 'sort -k1,1 -k2,2n %s/%s > %s/%s.sorted' % (real_path, bed_name, real_path, bed_name)
     cmd2 = 'bedToBigBed \
-            %s/input.bed \
+            %s/%s.sorted \
             http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.chrom.sizes \
-            %s/%s' % (real_path, real_path, bed_name.rstrip('.bed')+'.bb')
+            %s/%s' % (real_path, bed_name, real_path, bed_name.rstrip('.bed')+'.bb')
     cmds = [cmd1,cmd2]
     for cmd in cmds:
         shell_call(cmd)

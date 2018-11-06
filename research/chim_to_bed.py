@@ -19,7 +19,7 @@ from ptes.lib.general import init_file, writeln_to_file, shell_call
 from ptes.ptes import annot_junctions, \
     mate_intersection, get_read_interval, dict_to_interval, one_interval, \
     interval_to_string, get_interval_length
-from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder
+from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder, to_bigbed
 
 ### Arguments
 
@@ -58,6 +58,7 @@ make_bed_folder(folder_name=folder_name,
                 coord_name=coord_name,
                 info_name=info_name,
                 data_desc=args.tag)
+writeln_to_file('\t'.join(['#window', 'donor', 'acceptor', 'chain', 'cigar1', 'cigar2']), coord_name, folder=folder_name)
 
 with open(input_name, 'r') as input_file:
     for line in input_file:
@@ -88,7 +89,6 @@ with open(input_name, 'r') as input_file:
         acceptor_part = dict_to_interval(get_read_interval(cigar=cigar2, leftpos=coord2), put_n=False)
         parts = donor_part | acceptor_part  # one interval of intervals
         parts_list = [x for x in parts.components]
-        PTES_logger.info('Making BED files...')
         track_list = get_track_list(chrom=chrom,
                              chain=chain,
                              read_dict=list_to_dict(parts_list),
@@ -98,8 +98,11 @@ with open(input_name, 'r') as input_file:
                   int(track_list[1]) - 200,
                   int(track_list[2]) + 200)
         writeln_to_file('\t'.join(track_list), bed_name, folder=folder_name)
-        description = '\t'.join(map(str, [donor_ss, acceptor_ss]))
+        description = '\t'.join(map(str, [donor_ss, acceptor_ss, chain, cigar1, cigar2]))
         writeln_to_file('%s:%i-%i\t' % window + description, coord_name, folder=folder_name)
+
+to_bigbed(bed_name=bed_name, folder_name=folder_name)
+PTES_logger.info('Reading STAR chimeric output... done')
 
 
 
