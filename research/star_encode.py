@@ -21,10 +21,10 @@ parser.add_argument("-i","--input", type=str,
 parser.add_argument("-o","--output", type=str,
                     help="Output folder for results")  
 parser.add_argument("-g","--genome", type=str,
-                    default = '/uge_mnt/home/sunnymouse/Human_ref/GRCh37.p13.genome.fa',    
+                    default = '/home/sunnymouse/Human_ref/GRCh37.p13.genome.fa',
                     help="Absolute path to genome file")
 parser.add_argument("-gtf","--gtf_annot", type=str,
-                    default = '/uge_mnt/home/sunnymouse/Human_ref/hg19_exons.gtf',
+                    default = '/home/sunnymouse/Human_ref/hg19_exons.gtf',
                     help="Absolute path to genome file")
 parser.add_argument("-t","--tag", type=str,
                     help="Tag name for grouping results, i.e. ENCODE id")
@@ -49,7 +49,8 @@ outside_name = 'mate_outside.junction'
 outside_list = []
 init_file(outside_name, folder = path_to_file)
 
-mates = {'inside': 0, 'outside': 0, 'non-chim' : 0}
+mates_gtag = {'inside': 0, 'outside': 0, 'non-chim' : 0}
+mates_nc = {'inside': 0, 'outside': 0, 'non-chim' : 0}
 
 annot_donors = 0
 annot_acceptors = 0
@@ -60,7 +61,9 @@ with open(input_name, 'r') as input_file:
         donor_ss = int(line_list[1])    #donor splice site coord
         chain = line_list[2]
         acceptor_ss = int(line_list[4])    #acceptor splice site coord
-        junction_type = line_list[6]   #junction type: -1=encompassing junction (between the mates), 1=GT/AG, 2=CT/AC        
+        junction_type = line_list[6]   #junction type: -1=encompassing junction (between the mates), 1=GT/AG, 2=CT/AC
+        if junction_type == '-1':
+            PTES_logger.warning('Non-filtered input, junction type -1 is present!')
         read_name = line_list[9]
         coord1 = int(line_list[10])
         cigar1 = line_list[11]
@@ -68,11 +71,17 @@ with open(input_name, 'r') as input_file:
         cigar2 = line_list[13]
         if chain == '+':
             if donor_ss < acceptor_ss or abs(donor_ss - acceptor_ss) > 1000000:
-                mates['non-chim'] += 1
+                if junction_type == '1':
+                    mates_gtag['non-chim'] += 1
+                else:
+                    mates_nc['non-chim'] += 1
                 continue
         elif chain == '-':
             if donor_ss > acceptor_ss or abs(donor_ss - acceptor_ss) > 1000000:
-                mates['non-chim'] += 1
+                if junction_type == '1':
+                    mates_gtag['non-chim'] += 1
+                else:
+                    mates_nc['non-chim'] += 1
                 continue
         mate1, mate2 = return_mates(cigar1=cigar1,
                                     coord1=coord1,
@@ -80,7 +89,10 @@ with open(input_name, 'r') as input_file:
                                     coord2=coord2,
                                     chain=chain)
         interval_intersection = mate_intersection(mate1, mate2)
-        mates[interval_intersection] += 1
+        if junction_type == '1':
+            mates_gtag[interval_intersection] += 1
+        else:
+            mates_nc[interval_intersection] += 1
         if interval_intersection == 'outside':
             outside_list.append(line)
         if donor_ss in gtf_donors[chrom]:
@@ -89,9 +101,12 @@ with open(input_name, 'r') as input_file:
             annot_acceptors += 1
 
 PTES_logger.info('Reading STAR output... done')  
-PTES_logger.info('Inside: %i' % mates['inside'])
-PTES_logger.info('Outside: %i' % mates['outside'])
-PTES_logger.info('Intron too large: %i' % mates['non-chim'])
+PTES_logger.info('Inside GT/AG: %i' % mates_gtag['inside'])
+PTES_logger.info('Inside other: %i' % mates_nc['inside'])
+PTES_logger.info('Outside GT/AG: %i' % mates_gtag['outside'])
+PTES_logger.info('Outside other: %i' % mates_nc['outside'])
+PTES_logger.info('Intron too large GT/AG: %i' % mates_gtag['non-chim'])
+PTES_logger.info('Intron too large other: %i' % mates_nc['non-chim'])
 PTES_logger.info('Annot donors: %i' % annot_donors)
 PTES_logger.info('Annot acceptors: %i' % annot_acceptors)
 

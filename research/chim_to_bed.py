@@ -8,16 +8,11 @@ import random
 import os
 import errno
 
-import pandas as pd
-import numpy as np
-# from Bio import SeqIO
-# from Bio.SeqRecord import SeqRecord
-from interval import interval
+import pybedtools
 
 from ptes.constants import PTES_logger
 from ptes.lib.general import init_file, writeln_to_file, shell_call
-from ptes.ptes import annot_junctions, \
-    mate_intersection, get_read_interval, dict_to_interval, one_interval, \
+from ptes.ptes import get_read_interval, dict_to_interval, one_interval, \
     interval_to_string, get_interval_length
 from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder, to_bigbed
 
@@ -28,6 +23,12 @@ parser.add_argument("-i", "--input", type=str,
                     help="STAR output, Chimeric.out.junction")
 parser.add_argument("-o", "--output", type=str,
                     help="Output folder for results")
+parser.add_argument("-p", "--panhandles", type=str,
+                    default='/home/sunnymouse/projects/PTES/panhandles/pairs.ucsc.bed',
+                    help="BED file with panhandles")
+parser.add_argument("-gtf", "--gtf_annot", type=str,
+                    default='/home/sunnymouse/Human_ref/hg19_genes.gtf',
+                    help="Absolute path to genome file")
 parser.add_argument("-t", "--tag", type=str,
                     default='ENCODE',
                     help="Tag name for grouping results, i.e. ENCODE id")
@@ -103,7 +104,28 @@ with open(input_name, 'r') as input_file:
 
 to_bigbed(bed_name=bed_name, folder_name=folder_name)
 PTES_logger.info('Reading STAR chimeric output... done')
+PTES_logger.info('Intersecting with panhandles...')
+circles = pybedtools.BedTool('%s/%s' % (folder_name, bed_name))
+panhandles = pybedtools.BedTool(args.panhandles).set_chromsizes('hg19')
+genes = pybedtools.BedTool(args.gtf_annot)
+#intersection = panhandles.intersect(circles)
+#intersection_c = panhandles.intersect(circles, c=True)
+results_dict = panhandles.randomstats(circles,
+                                      iterations=10000,
+                                      include_distribution=False,
+                                      shuffle_kwargs={'chrom': True, 'genome': "hg19", 'incl': args.gtf_annot},
+                                      debug=False,
+                                      processes=10)
 
+keys = ['self', 'other', 'actual', 'median randomized', 'normalized', 'percentile',
+        'frac randomized above actual',
+        'frac randomized below actual',
+        'upper_97.5th',
+        'lower_2.5th',]
+with open('%s/results_dict' % folder_name, 'w') as res:
+    for key in keys:
+        res.write('%s: %s\n' % (key, results_dict[key]))
+PTES_logger.info('Intersecting with panhandles... done')
 
 
 

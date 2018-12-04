@@ -1,4 +1,5 @@
 from collections import defaultdict, OrderedDict
+
 from interval import interval
 import numpy as np
 
@@ -185,11 +186,14 @@ def annot_junctions(gtf_exons_name):
     return gtf_donors, gtf_acceptors
 
 
-def dict_to_interval(read_dict, put_n = True, output='interval'):
-    '''
-    Takes read_dict (OrderedDict),
-    returns interval of intervals for all features that consume reference
-    '''
+def dict_to_interval(read_dict, put_n=True, output='interval'):
+    """
+
+    :param read_dict: OrderedDict, output of get_read_interval
+    :param put_n: include N to interval, default True
+    :param output: interval or list, default interval
+    :return: interval or list for all features that consume reference
+    """
     output_interval = interval()
     for item in read_dict.items():
         feature = item[0]
@@ -329,3 +333,38 @@ def get_junctions(chrom, chain, values, gtf_donors, gtf_acceptors):
                 'annot_acceptor': annot_acceptor,
                 'chimeric': chimeric})
     return junc_list
+
+
+def star_line_dict(line):
+    """
+    For reading STAR Chimeric.out.junction file
+    :param line: line of file
+    :return: dictionary of attrs, type int or str
+    """
+    line_list = line.strip().split('\t')
+    junction_type = line_list[6]  # junction type: -1=encompassing junction (between the mates), 1=GT/AG, 2=CT/AC
+    if junction_type == '1':
+        junction_letters = 'GT/AG'
+    elif junction_type == '2':
+        junction_letters = 'CT/AC'
+    elif junction_type == '-1':
+        junction_letters = '-'
+    else:
+        junction_letters = '.'
+    read_attrs = {
+        'chrom1': line_list[0],
+        'donor_ss': int(line_list[1]), # donor splice site coord, 1-based
+        'chain1': line_list[2],
+        'chrom2': line_list[3],
+        'acceptor_ss': int(line_list[4]),  # acceptor splice site coord
+        'chain2': line_list[5],
+        'junction_letters': junction_letters,
+        'r_left': int(line_list[7]),
+        'r_right': int(line_list[8]),
+        'read_name': line_list[9],
+        'coord1': int(line_list[10]),
+        'cigar1': line_list[11],
+        'coord2': int(line_list[12]),
+        'cigar2': line_list[13],
+    }
+    return read_attrs

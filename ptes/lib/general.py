@@ -4,6 +4,7 @@
 
 import subprocess
 import os
+import errno
 from collections import defaultdict
 import logging
 import logging.config
@@ -136,3 +137,16 @@ def leave_unique(edge_dict, return_copies=True):
 
 def worker(kwargs):
     kwargs['function'](**kwargs)
+
+def make_dir(folder_name):
+    """
+    Makes directory, does nothing if it exists
+    :param folder_name: name of folder to be created
+    :return: nothing
+    """
+    try:
+        os.makedirs(folder_name)
+    except OSError as exc:
+        if exc.errno != errno.EEXIST:
+            raise
+        pass

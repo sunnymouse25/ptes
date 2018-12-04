@@ -22,7 +22,7 @@ def get_track_list(chrom, chain, read_dict, name = 'sim_read', color = 'r'):
     Example for read_dict: {'S1': interval([586.0, 657.0]), 'M1': interval([658.0, 686.0])} 
     Name may be CIGAR string or read_name;
     Color: red by default, may be 'b', 'g' or in RGB code like '255,0,255'
-    Returns .bed line with all tracks in the list
+    Returns .bed line with all tracks in the list, from 1-based to 0-based
     """
     track_list = [chrom]    
     blockSizes = []
