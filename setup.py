@@ -10,6 +10,7 @@ setup(
         'pandas>=0.23.4',
         'numpy>=1.15.1',
         'pyinterval>=1.2.0',
-        'pyaml'
+        'pyaml',
+        'errno',
         ]
     )

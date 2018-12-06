@@ -90,7 +90,7 @@ def chim_input(chim_name):
     Reads STAR chimeric output
     :param chim_name: name of file Chimeric.out.junction.filtered
     :return: List of dicts ready for making a DataFrame,
-    each dict is one read mapped as mate-inside or mate-outside
+    each dict is one read, mapped as mate-inside or mate-outside
     """
     annot_donors = 0
     annot_acceptors = 0
@@ -101,6 +101,8 @@ def chim_input(chim_name):
         for line in input_file:
             line_dict = star_line_dict(line=line)
             chrom = line_dict['chrom1']
+            if chrom == 'chrM':
+                continue
             chain = line_dict['chain1']
             read_name = line_dict['read_name']
             if line_dict['junction_letters'] == '-':
@@ -178,8 +180,9 @@ def chim_input(chim_name):
 def digit_code(number, threshold=6):
     """
     Makes code of length 6, adds 0 to the left
-    From 125 to 000125
-    :param digit: integer number w. 6 or less digits
+    Example: 125 -> 000125
+    :param number: integer number w. 6 or less digits
+    :param threshold: number of digits, default 6
     :return: string of same number with 6 digits
     """
     current_len = len(str(number))
@@ -211,8 +214,8 @@ if args.list:
     with open(args.tag, 'r') as tag_names_file:
         tag_names_list = [x.strip('\n') for x in tag_names_file.readlines()]
     pairs = zip(chim_names_list, sam_names_list, tag_names_list)
-
-    chim_junc_df = pd.DataFrame()
+    PTES_logger.info('Enabled list mode')
+    chim_junc_df_list = []
 
     for chim_name, sam_name, tag in pairs:
         PTES_logger.info('Input file %s' % chim_name)
@@ -232,9 +235,11 @@ if args.list:
                                 'chim_dist', 'mate_dist',
                                 'type']].sort_values(by='read_name').reset_index(drop=True)
             chim_df['id'] = tag
-            chim_junc_df = pd.concat(chim_junc_df, chim_df).reset_index(drop=True)
+            chim_junc_df_list.append(chim_df)
         except KeyError:
             PTES_logger.warning('Creating reads dataframe... empty dataframe')
+
+    chim_junc_df = pd.concat(chim_junc_df_list).reset_index(drop=True)
 
 if not args.list:
     PTES_logger.info('Input file %s' % args.input)
@@ -253,11 +258,12 @@ if not args.list:
 
     chim_junc_df = pd.DataFrame(read_names_list)
     try:
-        chim_junc_df = chim_junc_df[['read_name', 'chrom', 'chain',
-                                     'donor', 'acceptor', 'annot_donor',
-                                     'annot_acceptor', 'consensus',
-                                     'chim_dist', 'mate_dist',
-                                     'type']].sort_values(by='read_name').reset_index(drop=True)
+        chim_junc_df = chim_junc_df[[
+            'read_name', 'chrom', 'chain',
+            'donor', 'acceptor', 'annot_donor',
+            'annot_acceptor', 'consensus',
+            'chim_dist', 'mate_dist', 'type',
+        ]].sort_values(by='read_name').reset_index(drop=True)
         chim_junc_df['id'] = args.tag
     except KeyError:
         PTES_logger.warning('Creating reads dataframe... empty dataframe')
@@ -282,23 +288,33 @@ zz.to_csv('%s/chim_types.csv' % path_to_file, sep='\t')
 
 PTES_logger.info('Creating reads dataframe... done')
 PTES_logger.info('Making BED files...')
-bed_name = '%s.bed' % args.tag  # only track lines
-coord_name = '%s.coords.csv' % args.tag  # table with windows to paste into GB and with descriptions
-info_name = '%s.track' % args.tag  # file to submit to GB
+if args.list:
+    bed_prefix = 'ENCODE'+str(len(pairs))
+else:
+    bed_prefix = args.tag
+bed_name = '%s.bed' % bed_prefix  # only track lines
+coord_name = '%s.coords.csv' % bed_prefix  # table with windows to paste into GB and with descriptions
+info_name = '%s.track' % bed_prefix  # file to submit to GB
 
 folder_name = '%s/bed/' % path_to_file
 make_bed_folder(folder_name=folder_name,
                 bed_name=bed_name,
                 coord_name=coord_name,
                 info_name=info_name,
-                data_desc=args.tag,
+                data_desc=bed_prefix,
                 )
 
-writeln_to_file('\t'.join(['#window', 'inside', 'outside', 'annot', 'codes']), coord_name, folder=folder_name)
+writeln_to_file('\t'.join(
+    ['#window', 'inside', 'outside', 'annot', 'n_samples','codes']), coord_name, folder=folder_name)
 
-single_name = '%s.single.bed' % args.tag
+single_name = '%s.single.bed' % bed_prefix   # one line - both mates, for intersecting
 init_file(filename=single_name, folder=folder_name)
-annot_table = z.pivot_table(index=['chrom', 'chain', 'donor', 'acceptor'], values='annot')  # info about annotation
+
+index_list = ['chrom', 'chain', 'donor', 'acceptor']
+
+annot_table = z.pivot_table(index=index_list, values='annot')  # info about annotation
+id_groups = df_new.groupby(index_list).apply(lambda x: x.id.nunique()).reset_index(name='id_counts')
+id_table = id_groups.pivot_table(index=index_list, values='id_counts')  # info about ids
 num = 0
 for key, value in zz.iterrows():   # unique chimeric junctions
     chrom = key[0]  # key is (chrom, chain, donor_ss, acceptor_ss)
@@ -325,7 +341,7 @@ for key, value in zz.iterrows():   # unique chimeric junctions
                               read_dict=nonchim,
                               name='%s_%s_mate2' % (code, mate_type),
                               color='b')
-
+        # Making BED file with one row for pair of mates
         interval_list = map(lambda x: dict_to_interval(x, put_n=False), [chim1, chim2, nonchim])
         single_interval = interval()
         for part in interval_list:
@@ -336,7 +352,7 @@ for key, value in zz.iterrows():   # unique chimeric junctions
             chain=chain,
             read_dict=list_to_dict(single_interval_list),
             name='%s_%s' % (code, mate_type),
-            color='255,0,255')
+            color='255,0,255')   # for checking in GB that intervals are same
         writeln_to_file('\t'.join(single_track), single_name, folder=folder_name)
 
         for track_list in [bed1, bed2, bed3]:
@@ -351,13 +367,16 @@ for key, value in zz.iterrows():   # unique chimeric junctions
         value.inside,
         value.outside,
         annot_table.loc[key].annot,
+        id_table.loc[key].id_counts,
         '%s-%s' % (codes[0], codes[-1]),
                                     ]
                                 )
                             )
     writeln_to_file('%s:%i-%i\t' % window + description, coord_name, folder=folder_name)
 
+PTES_logger.info('Making BED files... done')
 to_bigbed(bed_name=bed_name, folder_name=folder_name)
+to_bigbed(bed_name=single_name, folder_name=folder_name)
 
 
 

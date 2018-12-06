@@ -60,11 +60,6 @@ def setup_logging(default_path,
         logging.basicConfig(level=default_level)        
 
 
-def print_time():
-    now = datetime.datetime.now()
-    print now.strftime("%Y-%m-%d %H:%M")        
-
-
 def sign(x): return 1 if x >= 0 else -1
 
 
