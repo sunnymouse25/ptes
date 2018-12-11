@@ -11,6 +11,5 @@ setup(
         'numpy>=1.15.1',
         'pyinterval>=1.2.0',
         'pyaml',
-        'errno',
         ]
     )
