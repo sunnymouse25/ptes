@@ -145,3 +145,19 @@ def make_dir(folder_name):
         if exc.errno != errno.EEXIST:
             raise
         pass
+
+
+def digit_code(number, threshold=6):
+    """
+    Makes code of length 6, adds 0 to the left
+    Example: 125 -> 000125
+    :param number: integer number w. 6 or less digits
+    :param threshold: number of digits, default 6
+    :return: string of same number with 6 digits
+    """
+    current_len = len(str(number))
+    if current_len >= threshold:
+        return str(number)
+    else:
+        n_zeros = threshold-current_len
+        return '0'*n_zeros+str(number)

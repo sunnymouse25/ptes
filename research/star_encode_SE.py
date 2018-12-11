@@ -6,17 +6,14 @@
 # Imports
 from collections import defaultdict
 import argparse
-import random
-
 
 import pandas as pd
-import numpy as np
 from interval import interval
 # from Bio import SeqIO
 # from Bio.SeqRecord import SeqRecord
 
 from ptes.constants import PTES_logger
-from ptes.lib.general import init_file, writeln_to_file, shell_call, make_dir
+from ptes.lib.general import init_file, writeln_to_file, shell_call, make_dir, digit_code
 from ptes.ptes import annot_junctions, \
     mate_intersection, get_read_interval, dict_to_interval, one_interval, \
     star_line_dict
@@ -100,21 +97,25 @@ def chim_input(chim_name):
     with open(chim_name, 'rb') as input_file:
         for line in input_file:
             line_dict = star_line_dict(line=line)
-            chrom = line_dict['chrom1']
+            if line_dict['chrom1'] == line_dict['chrom2'] \
+                    and line_dict['chain1'] == line_dict['chain2']:
+                chrom = line_dict['chrom1']
+                chain = line_dict['chain1']
+            else:
+                PTES_logger.error('Non-filtered STAR output')
+                PTES_logger.error('Use awk "$1 ==$4 && $3 ==$6" to filter')
+                continue
             if chrom == 'chrM':
                 continue
-            chain = line_dict['chain1']
-            read_name = line_dict['read_name']
             if line_dict['junction_letters'] == '-':
                 PTES_logger.error('PE input, junction type -1 is present!')
-                PTES_logger.warning('Skipping row...')
                 continue
             if abs(line_dict['donor_ss'] - line_dict['acceptor_ss']) > 1000000 \
                     or chain == '+' and line_dict['donor_ss'] < line_dict['acceptor_ss'] \
                     or chain == '-' and line_dict['donor_ss'] > line_dict['acceptor_ss']:
                 mates['non-chim'] += 1
                 continue
-
+            read_name = line_dict['read_name']
             annot_donor = 0
             annot_acceptor = 0
             if line_dict['donor_ss'] in gtf_donors[chrom]:
@@ -176,21 +177,6 @@ def chim_input(chim_name):
     PTES_logger.info('Annot acceptors: %i' % annot_acceptors)
     return read_names_list
 
-
-def digit_code(number, threshold=6):
-    """
-    Makes code of length 6, adds 0 to the left
-    Example: 125 -> 000125
-    :param number: integer number w. 6 or less digits
-    :param threshold: number of digits, default 6
-    :return: string of same number with 6 digits
-    """
-    current_len = len(str(number))
-    if current_len >= threshold:
-        return str(number)
-    else:
-        n_zeros = threshold-current_len
-        return '0'*n_zeros+str(number)
 
 # Main
 
@@ -292,17 +278,10 @@ if args.list:
     bed_prefix = 'ENCODE'+str(len(pairs))
 else:
     bed_prefix = args.tag
-bed_name = '%s.bed' % bed_prefix  # only track lines
-coord_name = '%s.coords.csv' % bed_prefix  # table with windows to paste into GB and with descriptions
-info_name = '%s.track' % bed_prefix  # file to submit to GB
 
-folder_name = '%s/bed/' % path_to_file
-make_bed_folder(folder_name=folder_name,
-                bed_name=bed_name,
-                coord_name=coord_name,
-                info_name=info_name,
-                data_desc=bed_prefix,
-                )
+folder_name, bed_name, coord_name = make_bed_folder(
+    prefix=bed_prefix,
+    path_to_file=path_to_file)
 
 writeln_to_file('\t'.join(
     ['#window', 'inside', 'outside', 'annot', 'n_samples','codes']), coord_name, folder=folder_name)
@@ -363,7 +342,7 @@ for key, value in zz.iterrows():   # unique chimeric junctions
     window = (chrom,   # one window for junction
               min(windows_min) - 200,
               max(windows_max) + 200)
-    description = '\t'.join(map(str,[   # one description for junction
+    description = '\t'.join(map(str, [   # one description for junction
         value.inside,
         value.outside,
         annot_table.loc[key].annot,
@@ -377,11 +356,3 @@ for key, value in zz.iterrows():   # unique chimeric junctions
 PTES_logger.info('Making BED files... done')
 to_bigbed(bed_name=bed_name, folder_name=folder_name)
 to_bigbed(bed_name=single_name, folder_name=folder_name)
-
-
-
-
-
-
-
-

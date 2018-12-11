@@ -2,7 +2,7 @@ from collections import OrderedDict
 import os
 
 from ptes.ptes import get_interval_length
-from ptes.lib.general import init_file, writeln_to_file, shell_call
+from ptes.lib.general import init_file, writeln_to_file, shell_call, make_dir
 
 
 def list_to_dict(lst):
@@ -66,19 +66,22 @@ def get_track_list(chrom, chain, read_dict, name = 'sim_read', color = 'r'):
     return map(str, track_list)
 
 
-def make_bed_folder(folder_name, bed_name, coord_name, info_name, data_desc):
+def make_bed_folder(prefix, path_to_file):
     """
-    Initiates 3 files essential for Genome Browser
-    :param folder_name: ./bed subfolder
-    :param bed_name: only track lines
-    :param coord_name: table with windows to paste into GB and with descriptions
-    :param info_name: file to submit to GB
-    :param data_desc: description for the whole dataset
-    :return: ./bed subfolder, BED file for track lines, table with windows to copy-paste, track file for GB
+    Initiates 3 files essential for Genome Browser:
+    :param path_to_file: folder where ./bed subfolder will be
+    :param prefix: prefix for names of files, i.e. sample tag
+    :return: ./bed subfolder,
+    BED file for track lines (.bed),
+    table with windows to copy-paste (.coords.csv),
+    track file for GB (.track)
     """
+    bed_name = '%s.bed' % prefix  # only track lines
+    coord_name = '%s.coords.csv' % prefix  # table with windows to paste into GB and with descriptions
+    info_name = '%s.track' % prefix  # file to submit to GB
+    folder_name = '%s/bed/' % path_to_file
+    make_dir(folder_name)
 
-    cmd1 = 'if [ ! -d %s ]; then mkdir %s; fi' % (folder_name, folder_name)
-    shell_call(cmd1)
     init_file(bed_name, folder=folder_name)
     init_file(coord_name, folder=folder_name)
     init_file(info_name, folder=folder_name)
@@ -96,9 +99,18 @@ def make_bed_folder(folder_name, bed_name, coord_name, info_name, data_desc):
                     visibility=2 \
                     itemRgb="On" \
     bigDataUrl=https://github.com/sunnymouse25/ptes/blob/dev/research/bed/%s?raw=true' % (
-    data_desc, bed_name.replace('.bed', '.bb')), info_name, folder=folder_name)
+    prefix, bed_name.replace('.bed', '.bb')), info_name, folder=folder_name)
+    return folder_name, bed_name, coord_name
+
 
 def to_bigbed(bed_name, folder_name):
+    """
+    Runs bedToBigBed script to convert bed to bigBed,
+    bedToBigBed must be in $PATH
+    :param bed_name: Name of BED file to be converted
+    :param folder_name: Folder of BED file
+    :return: sorted bed and bigBed files in the same folder
+    """
     if folder_name[-1] != '/':
         folder_name = folder_name + '/'
     real_path = os.path.dirname(os.path.realpath(folder_name+bed_name))
@@ -106,7 +118,7 @@ def to_bigbed(bed_name, folder_name):
     cmd2 = 'bedToBigBed \
             %s/%s.sorted \
             http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.chrom.sizes \
-            %s/%s' % (real_path, bed_name, real_path, bed_name.rstrip('.bed')+'.bb')
+            %s/%s' % (real_path, bed_name, real_path, bed_name.rpartition('.')[0]+'.bb')
     cmds = [cmd1,cmd2]
     for cmd in cmds:
         shell_call(cmd)

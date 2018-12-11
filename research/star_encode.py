@@ -11,7 +11,7 @@ import argparse
 from ptes.constants import PTES_logger
 from ptes.lib.general import init_file, writeln_to_file
 from ptes.ptes import annot_junctions, \
-    mate_intersection, return_mates
+    mate_intersection, return_mates, star_line_dict
 
 # from Bio import SeqIO
 # from Bio.SeqRecord import SeqRecord
@@ -43,7 +43,6 @@ PTES_logger.info('Reading GTF... done')
 
 # Reading filtered STAR output
 PTES_logger.info('Reading STAR output...')
-input_name = args.input
 path_to_file = args.output.rstrip('/')
 outside_name = 'mate_outside.junction'
 outside_list = []
@@ -54,51 +53,48 @@ mates_nc = {'inside': 0, 'outside': 0, 'non-chim' : 0}
 
 annot_donors = 0
 annot_acceptors = 0
-with open(input_name, 'r') as input_file:
+with open(args.input, 'rb') as input_file:
     for line in input_file:
-        line_list = line.strip(None).split('\t')
-        chrom = line_list[0]
-        donor_ss = int(line_list[1])    #donor splice site coord
-        chain = line_list[2]
-        acceptor_ss = int(line_list[4])    #acceptor splice site coord
-        junction_type = line_list[6]   #junction type: -1=encompassing junction (between the mates), 1=GT/AG, 2=CT/AC
-        if junction_type == '-1':
-            PTES_logger.warning('Non-filtered input, junction type -1 is present!')
-        read_name = line_list[9]
-        coord1 = int(line_list[10])
-        cigar1 = line_list[11]
-        coord2 = int(line_list[12])
-        cigar2 = line_list[13]
-        if chain == '+':
-            if donor_ss < acceptor_ss or abs(donor_ss - acceptor_ss) > 1000000:
-                if junction_type == '1':
-                    mates_gtag['non-chim'] += 1
-                else:
-                    mates_nc['non-chim'] += 1
-                continue
-        elif chain == '-':
-            if donor_ss > acceptor_ss or abs(donor_ss - acceptor_ss) > 1000000:
-                if junction_type == '1':
-                    mates_gtag['non-chim'] += 1
-                else:
-                    mates_nc['non-chim'] += 1
-                continue
-        mate1, mate2 = return_mates(cigar1=cigar1,
-                                    coord1=coord1,
-                                    cigar2=cigar2,
-                                    coord2=coord2,
+        line_dict = star_line_dict(line=line)
+        if line_dict['chrom1'] == line_dict['chrom2'] \
+                and line_dict['chain1'] == line_dict['chain2']:
+            chrom = line_dict['chrom1']
+            chain = line_dict['chain1']
+        else:
+            PTES_logger.error('Non-filtered STAR output')
+            PTES_logger.error('Use awk "$1 ==$4 && $3 ==$6" to filter')
+            continue
+        if chrom == 'chrM':
+            continue
+        if line_dict['junction_letters'] == '-':
+            PTES_logger.error('PE input, junction type -1 is present!')
+            continue
+        if abs(line_dict['donor_ss'] - line_dict['acceptor_ss']) > 1000000 \
+                or chain == '+' and line_dict['donor_ss'] < line_dict['acceptor_ss'] \
+                or chain == '-' and line_dict['donor_ss'] > line_dict['acceptor_ss']:
+            if line_dict['junction_letters'] == 'GT/AG':
+                mates_gtag['non-chim'] += 1
+            else:
+                mates_nc['non-chim'] += 1
+            continue
+        read_name = line_dict['read_name']
+        mate1, mate2 = return_mates(cigar1=line_dict['cigar1'],
+                                    coord1=line_dict['coord1'],
+                                    cigar2=line_dict['cigar2'],
+                                    coord2=line_dict['coord2'],
                                     chain=chain)
         interval_intersection = mate_intersection(mate1, mate2)
-        if junction_type == '1':
+        if line_dict['junction_letters'] == 'GT/AG':
             mates_gtag[interval_intersection] += 1
         else:
             mates_nc[interval_intersection] += 1
         if interval_intersection == 'outside':
             outside_list.append(line)
-        if donor_ss in gtf_donors[chrom]:
+        if line_dict['donor_ss'] in gtf_donors[chrom]:
             annot_donors += 1
-        if acceptor_ss in gtf_acceptors[chrom]:
+        if line_dict['acceptor_ss'] in gtf_acceptors[chrom]:
             annot_acceptors += 1
+
 
 PTES_logger.info('Reading STAR output... done')  
 PTES_logger.info('Inside GT/AG: %i' % mates_gtag['inside'])
