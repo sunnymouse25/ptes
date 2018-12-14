@@ -17,7 +17,7 @@ from ptes.lib.general import init_file, writeln_to_file, shell_call, make_dir, d
 from ptes.ptes import annot_junctions, \
     mate_intersection, get_read_interval, dict_to_interval, one_interval, \
     star_line_dict
-from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder, to_bigbed, single_track
+from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder, to_bigbed, get_single_track
 
 
 # Arguments
@@ -321,8 +321,8 @@ for key, value in zz.iterrows():   # unique chimeric junctions
                               name='%s_%s_mate2' % (code, mate_type),
                               color='b')
         # Making BED file with one row for pair of mates
-        single_track = single_track([chim1, chim2, nonchim],
-                                    {'chrom': chrom,
+        single_track = get_single_track([chim1, chim2, nonchim],
+                                        {'chrom': chrom,
                                      'chain': chain,
                                      'name': '%s_%s' % (code, mate_type),
                                      'color': '255,0,255'}) # for checking in GB that intervals are same

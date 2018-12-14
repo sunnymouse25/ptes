@@ -11,7 +11,7 @@ from ptes.lib.general import init_file, writeln_to_file, shell_call, make_dir, d
 from ptes.ptes import annot_junctions, \
     mate_intersection, get_read_interval, dict_to_interval, one_interval, \
     star_line_dict
-from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder, to_bigbed
+from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder, to_bigbed, get_single_track
 
 ### Arguments
 
@@ -124,11 +124,13 @@ with open(input_name, 'r') as input_file:
                   max(windows_max) + 200)
         coord_list.append('%s:%i-%i\t' % window + '\t'.join([junction_name, code]) + '\n')
         # Making BED file with one row for pair of mates
-        single_track = single_track([chim_part1, chim_part2],
-                                    {'chrom': chrom,
-                                     'chain': chain,
-                                     'name': '%s_%s_%s' % (chrom, junction_name, code),
-                                     'color': '255,0,255'}) # for checking in GB that intervals are same
+        single_track = get_single_track(read_dict_list=[chim_part1, chim_part2],
+                                        kwargs={
+                                        'chrom': chrom,
+                                        'chain': chain,
+                                        'name': '%s_%s_%s' % (chrom, junction_name, code),
+                                        'color': '255,0,255'}  # for checking in GB that intervals are same
+                                        )
         single_list.append('\t'.join(single_track)+'\n')
 
 PTES_logger.info('Reading STAR output... done')

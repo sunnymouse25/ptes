@@ -126,7 +126,7 @@ def to_bigbed(bed_name, folder_name):
         shell_call(cmd)
 
 
-def single_track(read_dict_list, kwargs):
+def get_single_track(read_dict_list, kwargs):
     """
     Makes single BED line for the list of read_dicts
     :param read_dict_list: list of read_dicts (get_read_interval outputs)
