@@ -42,7 +42,7 @@ panhandles = pybedtools.BedTool(args.b_input).set_chromsizes('hg19')
 genes = pybedtools.BedTool(args.gtf_annot)
 #intersection = panhandles.intersect(circles)
 #intersection_c = panhandles.intersect(circles, c=True)
-PTES_logger.info('Intersecting circles with panhandles...')
+PTES_logger.info('Intersecting A with B...')
 ab_results_dict = panhandles.randomstats(circles,
                                       iterations=10000,
                                       include_distribution=False,
@@ -50,8 +50,8 @@ ab_results_dict = panhandles.randomstats(circles,
                                       debug=False,
                                       processes=10)
 
-PTES_logger.info('Intersecting circles with panhandles... done')
-PTES_logger.info('Intersecting panhandles with circles... ')
+PTES_logger.info('Intersecting A with B... done')
+PTES_logger.info('Intersecting B with A... ')
 ba_results_dict = circles.randomstats(panhandles,
                                       iterations=10000,
                                       include_distribution=False,
@@ -59,7 +59,7 @@ ba_results_dict = circles.randomstats(panhandles,
                                       debug=False,
                                       processes=10)
 
-PTES_logger.info('Intersecting panhandles with circles... done')
+PTES_logger.info('Intersecting B with A... done')
 PTES_logger.info('Writing outputs...')
 
 keys = ['self',
@@ -72,8 +72,8 @@ keys = ['self',
         'frac randomized below actual',
         'upper_97.5th',
         'lower_2.5th',]
-with open('results_dict', 'w') as res1, \
-        open('results_dict', 'w') as res2:
+with open('%s_results_dict_ab' % args.tag, 'w') as res1, \
+        open('%s_results_dict_ba' % args.tag, 'w') as res2:
     for key in keys:
         res1.write('%s: %s\n' % (key, ab_results_dict[key]))
         res2.write('%s: %s\n' % (key, ba_results_dict[key]))

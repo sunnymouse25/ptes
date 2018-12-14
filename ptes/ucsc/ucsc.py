@@ -1,7 +1,9 @@
 from collections import OrderedDict
 import os
 
-from ptes.ptes import get_interval_length
+from interval import interval
+
+from ptes.ptes import get_interval_length, dict_to_interval
 from ptes.lib.general import init_file, writeln_to_file, shell_call, make_dir
 
 
@@ -122,3 +124,20 @@ def to_bigbed(bed_name, folder_name):
     cmds = [cmd1,cmd2]
     for cmd in cmds:
         shell_call(cmd)
+
+
+def single_track(read_dict_list, kwargs):
+    """
+    Makes single BED line for the list of read_dicts
+    :param read_dict_list: list of read_dicts (get_read_interval outputs)
+    :param kwargs: kwargs for get_track_list function
+    :return: track list ready for .bed output
+    """
+    interval_list = map(lambda x: dict_to_interval(x, put_n=False), read_dict_list)
+    single_interval = interval()
+    for part in interval_list:
+        single_interval = single_interval | part
+    single_interval_list = [y for y in single_interval.components]
+    single_track = get_track_list(
+                read_dict=list_to_dict(single_interval_list), **kwargs)  # for checking in GB that intervals are same
+    return single_track
