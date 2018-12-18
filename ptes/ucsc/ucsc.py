@@ -10,7 +10,8 @@ from ptes.lib.general import init_file, writeln_to_file, shell_call, make_dir
 def list_to_dict(lst):
     """
     From list of intervals makes dict of M's
-    {'M1': [interval([70799946.0, 70799962.0], 'M2': interval([70801644.0, 70801667.0])}
+    :param lst: example [[interval([70799946.0, 70799962.0], interval([70801644.0, 70801667.0]]
+    :return: OrderedDict, example {'M1': [interval([70799946.0, 70799962.0], 'M2': interval([70801644.0, 70801667.0])}
     """
     numbers = range(1, len(lst)+1)
     names = map(lambda x: 'M' + str(x), numbers)
@@ -18,13 +19,17 @@ def list_to_dict(lst):
     return dct
 
 
-def get_track_list(chrom, chain, read_dict, name = 'sim_read', color = 'r'):
+def get_track_list(chrom, chain, read_dict, score=0, name='sim_read', color='r'):
     """
-    Gets chrom, chain, dictionary of read intervals instead of cigar and leftpos;
-    Example for read_dict: {'S1': interval([586.0, 657.0]), 'M1': interval([658.0, 686.0])} 
-    Name may be CIGAR string or read_name;
-    Color: red by default, may be 'b', 'g' or in RGB code like '255,0,255'
-    Returns .bed line with all tracks in the list, from 1-based to 0-based
+    Gets chrom, chain, dictionary of read intervals (get_read_interval outputs)
+    instead of cigar and leftpos;
+    :param chrom: chromosome
+    :param chain: strand
+    :param read_dict: example: {'S1': interval([586.0, 657.0]),'M1': interval([658.0, 686.0])}
+    :param score: 0 by default, integer value 0-1000
+    :param name: Name may be CIGAR string or read_name; 'sim_read' by default
+    :param color: red by default, may be 'b', 'g' or string with RGB code like '255,0,255'
+    :return: .bed line with all tracks in the list, from 1-based to 0-based
     """
     track_list = [chrom]    
     blockSizes = []
@@ -50,7 +55,7 @@ def get_track_list(chrom, chain, read_dict, name = 'sim_read', color = 'r'):
     track_list.append(chromStart) # chromStart, counts from 0
     track_list.append(chromEnd)   # chromEnd, not included
     track_list.append(name)      # name
-    track_list.append('0')        # score
+    track_list.append(str(score))        # score
     track_list.append(chain)      # chain
     track_list.append(thickStart) # thickStart
     track_list.append(thickEnd)   # thickEnd
@@ -88,29 +93,32 @@ def make_bed_folder(prefix, path_to_file):
     init_file(coord_name, folder=folder_name)
     init_file(info_name, folder=folder_name)
 
-    writeln_to_file('browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac rmsk', info_name, folder=folder_name)
-    writeln_to_file(
-        'browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3',
+    writeln_to_file('\n'.join(
+        ['browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac rmsk',
+         'browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3',
+         'browser pack gtexGene',
+         'track type=bigBed \
+         name="%s" \
+         description="bigBed" \
+         visibility=2 \
+         itemRgb="On" \
+         bigDataUrl=https://github.com/sunnymouse25/ptes/blob/dev/research/bed/%s?raw=true' % (
+             prefix, bed_name.replace('.bed', '.bb')
+         )
+         ]
+    ),
         info_name,
-        folder=folder_name
-    )
-    writeln_to_file('browser pack gtexGene', info_name, folder=folder_name)
-    writeln_to_file('track type=bigBed \
-                    name="%s" \
-                    description="bigBed" \
-                    visibility=2 \
-                    itemRgb="On" \
-    bigDataUrl=https://github.com/sunnymouse25/ptes/blob/dev/research/bed/%s?raw=true' % (
-    prefix, bed_name.replace('.bed', '.bb')), info_name, folder=folder_name)
+        folder=folder_name)
     return folder_name, bed_name, coord_name
 
 
-def to_bigbed(bed_name, folder_name):
+def to_bigbed(bed_name, folder_name, gen_num='hg19'):
     """
     Runs bedToBigBed script to convert bed to bigBed,
     bedToBigBed must be in $PATH
     :param bed_name: Name of BED file to be converted
     :param folder_name: Folder of BED file
+    :param gen_num: Name of genome version, hg19 by default
     :return: sorted bed and bigBed files in the same folder
     """
     if folder_name[-1] != '/':
@@ -119,8 +127,10 @@ def to_bigbed(bed_name, folder_name):
     cmd1 = 'sort -k1,1 -k2,2n %s/%s > %s/%s.sorted' % (real_path, bed_name, real_path, bed_name)
     cmd2 = 'bedToBigBed \
             %s/%s.sorted \
-            http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.chrom.sizes \
-            %s/%s' % (real_path, bed_name, real_path, bed_name.rpartition('.')[0]+'.bb')
+            http://hgdownload.soe.ucsc.edu/goldenPath/%s/bigZips/%s.chrom.sizes \
+            %s/%s' % (real_path, bed_name,
+                      gen_num, gen_num,
+                      real_path, bed_name.rpartition('.')[0]+'.bb')
     cmds = [cmd1,cmd2]
     for cmd in cmds:
         shell_call(cmd)

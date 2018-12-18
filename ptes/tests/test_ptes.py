@@ -290,6 +290,23 @@ class TestPtes(unittest.TestCase):
             res_list = ptes.get_junctions(chrom, chains[i], value, gtf_donors, gtf_acceptors)
             self.assertListEqual(exp_lists[i], res_list)
 
+    def test_randomize_interval(self):
+        interval_lists = [
+            [interval([10, 20]), interval([1.0, 100.0])],
+            [interval([100, 200]), interval([1.0, 100.0])],
+            [interval([101, 200]), interval([1.0, 100.0])],
+        ]
+        exp_lists = [
+            [interval([4300.0, 4349.0]), interval([4000.0, 4099.0])],
+            [interval([4000.0, 4099.0]), interval([4300.0, 4349.0])],
+            [interval([3050.0, 3149.0]), interval([4000.0, 4099.0])],
+            [interval([4000.0, 4099.0]), interval([3050.0, 3149.0])],
+        ]
+        for i, tuple in enumerate(interval_lists):
+            res_list = ptes.randomize_interval(small_i=tuple[0], large_i=tuple[1])
+            print res_list
+            #self.assertIn(res_list, interval[1, 100])
+
 
 if __name__ == "__main__":
     unittest.main()

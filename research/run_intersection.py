@@ -1,5 +1,5 @@
 # Takes single BED file
-# Runs intersection with panhandles
+# Runs union with panhandles
 
 # Imports
 from collections import defaultdict
@@ -40,7 +40,7 @@ PTES_logger.info('Input files: B %s ' % args.b_input)
 circles = pybedtools.BedTool(args.a_input)
 panhandles = pybedtools.BedTool(args.b_input).set_chromsizes('hg19')
 genes = pybedtools.BedTool(args.gtf_annot)
-#intersection = panhandles.intersect(circles)
+#union = panhandles.intersect(circles)
 #intersection_c = panhandles.intersect(circles, c=True)
 PTES_logger.info('Intersecting A with B...')
 ab_results_dict = panhandles.randomstats(circles,

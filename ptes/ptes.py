@@ -1,4 +1,5 @@
 from collections import defaultdict, OrderedDict
+import random
 
 from interval import interval
 import numpy as np
@@ -211,7 +212,7 @@ def dict_to_interval(read_dict, put_n=True, output='interval'):
 
 def mate_intersection(interval1, interval2):
     intersection = one_interval(interval1) & one_interval(interval2)
-    if intersection == interval():  # zero intersection
+    if intersection == interval():  # zero union
         return 'outside'
     else:
         return 'inside'
@@ -368,3 +369,25 @@ def star_line_dict(line):
         'cigar2': line_list[13],
     }
     return read_attrs
+
+
+def randomize_interval(small_i, large_i):
+    """
+    Takes two intervals
+    Randomly moves small interval inside large interval
+    Doesn't change size of small interval
+    :param small_i: small interval
+    :param large_i: large interval
+    :return: New coordinates of small interval
+    """
+    small_i = one_interval(small_i)
+    large_i = one_interval(large_i)
+    small_i_len = get_interval_length(small_i)
+    if small_i in large_i:
+        left_edge = int(large_i[0].inf)
+        right_edge = int(large_i[0].sup)-small_i_len
+        new_inf = random.randint(left_edge, right_edge)
+        new_i = interval[new_inf, new_inf+small_i_len-1]
+        return new_i
+    else:
+        return small_i
