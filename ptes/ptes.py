@@ -211,11 +211,22 @@ def dict_to_interval(read_dict, put_n=True, output='interval'):
 
 
 def mate_intersection(interval1, interval2):
+    """
+    Defines mate_inside and mate_outside
+    :param interval1: chimeric mate
+    :param interval2: normal mate
+    :return: 'inside' or 'outside'
+    """
     intersection = one_interval(interval1) & one_interval(interval2)
     if intersection == interval():  # zero union
         return 'outside'
     else:
-        return 'inside'
+        if interval2[0].inf >= interval1[0].inf and \
+                interval2[-1].sup <= interval1[-1].sup:   # normal mate is inside chimeric
+            return 'inside'
+        else:
+            return 'outside'
+
 
 
 def return_mates(cigar1, coord1, cigar2, coord2, chain):

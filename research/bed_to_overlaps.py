@@ -78,7 +78,7 @@ with open(args.b_with_genes, 'r') as bwg_file:
         end1 = line_list[2]
         start2 = int(line_list[4])
         end2 = int(line_list[5])
-        b_dict[(chrom1,start1,end1)] = interval[start2, end2]
+        b_dict[(chrom1, start1, end1)] = interval[start2, end2]
 PTES_logger.info('Reading B-feature file... done')
 
 PTES_logger.info('Reading input file... ')
@@ -97,7 +97,7 @@ with open(args.input, 'r') as input_file:
         b_interval = interval[int(line_list[b_start+1]), int(line_list[b_start+2])]
         real_category = return_category(a_interval=a_interval,
                                    b_interval=b_interval)
-        b_key = b_dict[(chrom1,line_list[b_start+1],line_list[b_start+2])]
+        b_key = (chrom1, line_list[b_start+1], line_list[b_start+2])
         gene_interval = b_dict[b_key]
         random_dict = {
             'a_in_b': 0,
@@ -125,7 +125,7 @@ pivot_name = 'categories_pivot.csv'
 
 with open('%s/%s' % (path_to_file, category_name), 'w') as category_file:
     for track in df_list:
-        category_file.write('\t'.join(track) + '\n')
+        category_file.write('\t'.join(map(str, track)) + '\n')
 
 df = pd.DataFrame(df_list)
 df.columns = ['chrom', 'start', 'end', 'real_category', 'rnd_a_in_b', 'rnd_b_in_a', 'rnd_overlap']

@@ -8,9 +8,6 @@ from collections import defaultdict
 import argparse
 
 import pandas as pd
-from interval import interval
-# from Bio import SeqIO
-# from Bio.SeqRecord import SeqRecord
 
 from ptes.constants import PTES_logger
 from ptes.lib.general import init_file, writeln_to_file, shell_call, make_dir, digit_code
@@ -41,6 +38,10 @@ parser.add_argument("-gtf", "--gtf_annot", type=str,
 parser.add_argument("-t", "--tag", type=str,
                     default='ENCODE',
                     help="Tag name for grouping results, i.e. ENCODE id OR list of tags")
+parser.add_argument("-sort", "--sort", type=str,
+                    help="Sort BED files")
+parser.add_argument("-bb", "--bigbed", type=str,
+                    help="Create .bigBed file")
 args = parser.parse_args()
 
 # Functions
@@ -273,6 +274,7 @@ zz.to_csv('%s/chim_types.csv' % path_to_file, sep='\t')
 
 
 PTES_logger.info('Creating reads dataframe... done')
+
 PTES_logger.info('Making BED files...')
 if args.list:
     bed_prefix = 'ENCODE'+str(len(pairs))
@@ -289,7 +291,15 @@ writeln_to_file('\t'.join(
 single_name = '%s.single.bed' % bed_prefix   # one line - both mates, for intersecting
 init_file(filename=single_name, folder=folder_name)
 
+code_name = '%s.codes.csv' % bed_prefix   # one line - both mates, for intersecting
+init_file(filename=code_name, folder=folder_name)
+
 index_list = ['chrom', 'chain', 'donor', 'acceptor']
+
+bed_list = []  # for outputting BED lines
+coord_list = []   # for outputting coord lines
+single_list = [] # for outputting BED lines, one row per one chimeric junction
+code_list = [] # for outputting coord lines, one row per one read
 
 annot_table = z.pivot_table(index=index_list, values='annot')  # info about annotation
 id_groups = df_new.groupby(index_list).apply(lambda x: x.id.nunique()).reset_index(name='id_counts')
@@ -320,18 +330,29 @@ for key, value in zz.iterrows():   # unique chimeric junctions
                               read_dict=nonchim,
                               name='%s_%s_mate2' % (code, mate_type),
                               color='b')
+        code_line = '\t'.join(map(str, [  # one description for junction
+            value.inside,
+            value.outside,
+            annot_table.loc[key].annot,
+            id_table.loc[key].id_counts,
+            code,
+        ]
+                                  )
+                              )
+        code_list.append(code_line + '\n')
         # Making BED file with one row for pair of mates
         single_track = get_single_track([chim1, chim2, nonchim],
                                         {'chrom': chrom,
-                                     'chain': chain,
-                                     'name': '%s_%s' % (code, mate_type),
-                                     'color': '255,0,255'}) # for checking in GB that intervals are same
-        writeln_to_file('\t'.join(single_track), single_name, folder=folder_name)
+                                         'chain': chain,
+                                         'name': '%s_%s' % (code, mate_type),
+                                         'color': '255,0,255'}) # for checking in GB that intervals are same
+        single_list.append('\t'.join(single_track) + '\n')
 
         for track_list in [bed1, bed2, bed3]:
             windows_min.append(int(track_list[1]))  # track_list[1] is chromStart, track_list[2] is chromEnd
             windows_max.append(int(track_list[2]))
-            writeln_to_file('\t'.join(track_list), bed_name, folder=folder_name)
+            bed_line = '\t'.join(track_list) + '\n'
+            bed_list.append(bed_line)
 
     window = (chrom,   # one window for junction
               min(windows_min) - 200,
@@ -345,8 +366,41 @@ for key, value in zz.iterrows():   # unique chimeric junctions
                                     ]
                                 )
                             )
-    writeln_to_file('%s:%i-%i\t' % window + description, coord_name, folder=folder_name)
+    coord_list.append('%s:%i-%i\t' % window + description + '\n')
+
 
 PTES_logger.info('Making BED files... done')
-to_bigbed(bed_name=bed_name, folder_name=folder_name)
-to_bigbed(bed_name=single_name, folder_name=folder_name)
+
+PTES_logger.info('Writing BED files...')
+with open('%s/%s' % (folder_name, bed_name), 'w') as bed_file, \
+        open('%s/%s' % (folder_name, coord_name), 'w') as coord_file, \
+        open('%s/%s' % (folder_name, code_name), 'w') as code_file, \
+        open('%s/%s' % (folder_name, single_name), 'w') as single_bed_file:
+    for track_list in bed_list:
+        bed_file.write(track_list)
+    for coord in coord_list:
+        coord_file.write(coord)
+    for code_line in code_list:
+        code_file.write(code_line)
+    for track_list in single_list:
+        single_bed_file.write(track_list)
+
+PTES_logger.info('Writing BED files... done')
+
+if args.sort:
+    PTES_logger.info('Sorting BED files...')
+    for filename in [bed_name, single_name]:
+        shell_call('cat %s/%s | sort -k1,1 -k2,2n  > %s/%s.sorted' % (folder_name,
+                                                                      filename,
+                                                                      folder_name,
+                                                                      filename))
+
+    PTES_logger.info('Sorting BED files... done')
+
+if args.bigbed:
+    PTES_logger.info('Making bigBed...')
+    to_bigbed(bed_name=bed_name, folder_name=folder_name)
+    to_bigbed(bed_name=single_name, folder_name=folder_name)
+    PTES_logger.info('Making bigBed... done')
+
+
