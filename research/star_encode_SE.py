@@ -1,7 +1,6 @@
-# Takes paired-end STAR output Chimeric.out.junction
+# Takes single-end STAR output mate1_Chimeric.out.junction
 # Finds "mate-outside" and "mate-inside", with GT/AG and unique mapped reads,
-# Counts x / (x + y) where x is N(mate-outside) and y is N(mate-inside)
-# Copies lines with mates outside to mates_outside.junction to make bigBed files for UCSC genome browser
+# Creates .bed files for viewing in UCSC Genome Browser
 
 # Imports
 from collections import defaultdict
@@ -14,7 +13,7 @@ from ptes.lib.general import init_file, writeln_to_file, shell_call, make_dir, d
 from ptes.ptes import annot_junctions, \
     mate_intersection, get_read_interval, dict_to_interval, one_interval, \
     star_line_dict
-from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder, to_bigbed, get_single_track
+from ptes.ucsc.ucsc import get_track_list, make_bed_folder, to_bigbed, get_single_track
 
 
 # Arguments
@@ -285,9 +284,6 @@ folder_name, bed_name, coord_name = make_bed_folder(
     prefix=bed_prefix,
     path_to_file=path_to_file)
 
-writeln_to_file('\t'.join(
-    ['#window', 'inside', 'outside', 'annot', 'n_samples','codes']), coord_name, folder=folder_name)
-
 single_name = '%s.single.bed' % bed_prefix   # one line - both mates, for intersecting
 init_file(filename=single_name, folder=folder_name)
 
@@ -378,8 +374,14 @@ with open('%s/%s' % (folder_name, bed_name), 'w') as bed_file, \
         open('%s/%s' % (folder_name, single_name), 'w') as single_bed_file:
     for track_list in bed_list:
         bed_file.write(track_list)
+    coord_file.write('\t'.join(
+        ['#window', 'inside', 'outside', 'annot', 'n_samples', 'codes']
+    ) + '\n')
     for coord in coord_list:
         coord_file.write(coord)
+    code_file.write('\t'.join(
+        ['#inside', 'outside', 'annot', 'n_samples', 'code']
+    ) + '\n')
     for code_line in code_list:
         code_file.write(code_line)
     for track_list in single_list:

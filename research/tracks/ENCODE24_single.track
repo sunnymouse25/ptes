@@ -1,4 +1,4 @@
 browser full knownGene ensGene cons100way wgEncodeRegMarkH3k27ac rmsk
 browser dense refSeqComposite pubs snp150Common wgEncodeRegDnaseClustered wgEncodeRegTfbsClusteredV3
 browser pack gtexGene
-track type=bigBed                     name="ENCODE24_single"                     description="bigBed"                     visibility=2                     itemRgb="On"     bigDataUrl=https://github.com/sunnymouse25/ptes/blob/dev/research/bed/ENCODE24.singl.bb?raw=true
+track type=bigBed                     name="ENCODE24_single"                     description="bigBed"                     visibility=2                     itemRgb="On"     bigDataUrl=https://github.com/sunnymouse25/ptes/blob/dev/research/bed/ENCODE24.single.bb?raw=true
