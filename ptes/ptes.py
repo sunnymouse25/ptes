@@ -4,6 +4,8 @@ import random
 from interval import interval
 import numpy as np
 
+from ptes.constants import PTES_logger
+
 
 def order_cigar(row):
     """
@@ -402,3 +404,22 @@ def randomize_interval(small_i, large_i):
         return new_i
     else:
         return small_i
+
+
+def get_b_start(row, logger=PTES_logger):
+    """
+    Takes bedtools intersect -wo output, finds start of B-feature
+    :param row: row of bedtools intersect -wo output
+    :param logger: logger
+    :return: number of element where B-feature starts, integer
+    """
+    line_list = row.strip().split()
+    chrom1 = line_list[0]
+    for i, elm in enumerate(line_list[3:], start=3):
+        if elm == chrom1:
+            b_start = i  # number of field where feature B starts
+            return b_start
+    logger.warning(','.join(line_list))
+    logger.error('Feature B start not found, skipping row...')
+    logger.warning('Have you passed the right file as input?')
+    return None

@@ -9,7 +9,7 @@ import argparse
 from ptes.constants import PTES_logger
 from ptes.lib.general import init_file, writeln_to_file, shell_call, make_dir, digit_code
 from ptes.ptes import annot_junctions, \
-    mate_intersection, get_read_interval, dict_to_interval, one_interval, \
+    get_read_interval, dict_to_interval, one_interval, \
     star_line_dict
 from ptes.ucsc.ucsc import list_to_dict, get_track_list, make_bed_folder, to_bigbed, get_single_track
 

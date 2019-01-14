@@ -296,16 +296,16 @@ class TestPtes(unittest.TestCase):
             [interval([100, 200]), interval([1.0, 100.0])],
             [interval([101, 200]), interval([1.0, 100.0])],
         ]
-        exp_lists = [
-            [interval([4300.0, 4349.0]), interval([4000.0, 4099.0])],
-            [interval([4000.0, 4099.0]), interval([4300.0, 4349.0])],
-            [interval([3050.0, 3149.0]), interval([4000.0, 4099.0])],
-            [interval([4000.0, 4099.0]), interval([3050.0, 3149.0])],
+        exp_list = [
+            True,
+            False,
+            False,
         ]
         for i, tuple in enumerate(interval_lists):
-            res_list = ptes.randomize_interval(small_i=tuple[0], large_i=tuple[1])
-            print res_list
-            #self.assertIn(res_list, interval[1, 100])
+            res_int = ptes.randomize_interval(small_i=tuple[0], large_i=tuple[1])
+            res_bool = res_int in interval[1, 100]
+            print res_int, res_bool
+            self.assertEqual(res_bool, exp_list[i])
 
 
 if __name__ == "__main__":
