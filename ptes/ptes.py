@@ -4,7 +4,7 @@ import random
 from interval import interval
 import numpy as np
 
-from ptes.constants import PTES_logger
+from constants import PTES_logger
 
 
 def order_cigar(row):

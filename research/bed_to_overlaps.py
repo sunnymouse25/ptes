@@ -1,8 +1,9 @@
 # Takes bedtools intersect -wa -wb output,
 # Attributes category for each row: 'a_in_b', 'b_in_a', 'overlap'
-# Makes tables: 'feature A - category' and pivot 'unique_feature_A - n_a_in_b - n_b_in_a - n_overlap'
+# Makes pivot 'unique_feature_A - n_a_in_b - n_b_in_a - n_overlap'
 # Runs randomizing of B inside B's genes:
-# bedtools intersect -a B_FEATURE -b GENES_NO_INTERSECTION -wa -wb output
+# bedtools intersect -a B_FEATURE -b GENES_NO_INTERSECTION -wo > output
+# Plots histogram for number of random intersections with real value
 
 # Imports
 from collections import defaultdict
@@ -224,7 +225,7 @@ ax1.set(title='a_in_b');
 
 ax12 = fig.add_subplot(322)
 ax12.boxplot(a_in_b_list)
-ax12.plot(1, real_a_in_b, color='w', marker='*', markeredgecolor='k')
+ax12.plot(1, real_a_in_b, color='r', marker='*', markeredgecolor='k', markersize=25)
 ax12.set(title='a_in_b');
 
 ax2 = fig.add_subplot(323)
@@ -234,7 +235,7 @@ ax2.set(title='b_in_a');
 
 ax22 = fig.add_subplot(324)
 ax22.boxplot(b_in_a_list)
-ax22.plot(1, real_b_in_a, color='w', marker='*', markeredgecolor='k')
+ax22.plot(1, real_b_in_a, color='w', marker='*', markeredgecolor='k', markersize=25)
 ax22.set(title='b_in_a');
 
 ax3 = fig.add_subplot(325)
@@ -244,24 +245,25 @@ ax3.set(title='overlap');
 
 ax32 = fig.add_subplot(326)
 ax32.boxplot(overlap_list)
-ax32.plot(1, real_overlap, color='w', marker='*', markeredgecolor='k')
+ax32.plot(1, real_overlap, color='w', marker='*', markeredgecolor='k', markersize=25)
 ax32.set(title='overlap');
 
 plt.savefig('%s/histograms.png' % path_to_file)
 
-test_name = '%s/data_hist.test' % path_to_file
-with open(test_name, 'w') as test_file:
-    test_file.write('a_in_b' + '\n')
-    test_file.write('real: %i' % real_a_in_b + '\n')
-    test_file.write('random: '+','.join(map(str, a_in_b_list)) + '\n')
+# saving data for histograms
+hist_name = '%s/data_hist' % path_to_file
+with open(hist_name, 'w') as hist_file:
+    hist_file.write('a_in_b' + '\n')
+    hist_file.write('real: %i' % real_a_in_b + '\n')
+    hist_file.write('random: ' + ','.join(map(str, a_in_b_list)) + '\n')
 
-    test_file.write('b_in_a' + '\n')
-    test_file.write('real: %i' % real_b_in_a + '\n')
-    test_file.write('random: '+','.join(map(str, b_in_a_list)) + '\n')
+    hist_file.write('b_in_a' + '\n')
+    hist_file.write('real: %i' % real_b_in_a + '\n')
+    hist_file.write('random: ' + ','.join(map(str, b_in_a_list)) + '\n')
 
-    test_file.write('overlap' + '\n')
-    test_file.write('real: %i' % real_overlap + '\n')
-    test_file.write('random: '+','.join(map(str, overlap_list)) + '\n')
+    hist_file.write('overlap' + '\n')
+    hist_file.write('real: %i' % real_overlap + '\n')
+    hist_file.write('random: ' + ','.join(map(str, overlap_list)) + '\n')
 
 for key in key_set:
     all_random_groups[key] = zip(*all_random_data)
