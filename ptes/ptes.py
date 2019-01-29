@@ -396,11 +396,15 @@ def randomize_interval(small_i, large_i):
     small_i = one_interval(small_i)
     large_i = one_interval(large_i)
     small_i_len = get_interval_length(small_i)
-    left_edge = int(large_i[0].inf)
-    right_edge = int(large_i[0].sup) - small_i_len
-    new_inf = random.randint(left_edge, right_edge)
-    new_i = interval[new_inf, new_inf + small_i_len - 1]
-    return new_i
+    large_i_len = get_interval_length(large_i)
+    if small_i_len < large_i_len:
+        left_edge = int(large_i[0].inf)
+        right_edge = int(large_i[0].sup) - small_i_len
+        new_inf = random.randint(left_edge, right_edge)
+        new_i = interval[new_inf, new_inf + small_i_len - 1]
+        return new_i
+    else:
+        return small_i
 
 
 

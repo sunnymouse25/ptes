@@ -293,11 +293,15 @@ class TestPtes(unittest.TestCase):
     def test_randomize_interval(self):
         interval_lists = [
             [interval([10, 20]), interval([1.0, 100.0])],
+            [interval([20, 10]), interval([1.0, 100.0])],
+            [interval([200, 1000]), interval([1.0, 100.0])],
             [interval([150, 200]), interval([1.0, 100.0])],
             [interval([181, 200]), interval([1.0, 100.0])],
         ]
         exp_list = [
             True,
+            True,
+            False,
             True,
             True,
         ]
