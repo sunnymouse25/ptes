@@ -293,13 +293,13 @@ class TestPtes(unittest.TestCase):
     def test_randomize_interval(self):
         interval_lists = [
             [interval([10, 20]), interval([1.0, 100.0])],
-            [interval([100, 200]), interval([1.0, 100.0])],
-            [interval([101, 200]), interval([1.0, 100.0])],
+            [interval([150, 200]), interval([1.0, 100.0])],
+            [interval([181, 200]), interval([1.0, 100.0])],
         ]
         exp_list = [
             True,
-            False,
-            False,
+            True,
+            True,
         ]
         for i, tuple in enumerate(interval_lists):
             res_int = ptes.randomize_interval(small_i=tuple[0], large_i=tuple[1])
