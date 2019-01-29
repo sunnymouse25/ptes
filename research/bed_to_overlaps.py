@@ -32,9 +32,7 @@ parser.add_argument("-m", "--method", type=str,
                     nargs='+',
                     default=['inside', 'outside', 'bedtools', ],
                     help="Shuffling method(s): inside, outside, bedtools")
-parser.add_argument("-t", "--tag", type=str,
-                    default='ENCODE',
-                    help="Tag name for grouping results, i.e. ENCODE id")
+
 args = parser.parse_args()
 
 # Functions

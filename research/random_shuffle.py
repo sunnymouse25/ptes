@@ -9,13 +9,14 @@
 from collections import defaultdict
 import argparse
 import random
+import os
 
 from interval import interval
 import numpy as np
 
 from ptes.constants import PTES_logger
 from ptes.lib.general import shell_call, make_dir
-from ptes.ptes import interval_to_string, randomize_interval, get_b_start, get_interval_length
+from ptes.ptes import interval_to_string, randomize_interval, get_b_start, get_interval_length, count_relative_location
 
 ### Arguments
 
@@ -86,43 +87,42 @@ path_to_file = args.output.rstrip('/')
 random_folder = path_to_file + '/random'
 make_dir(random_folder)
 
-if 'outside' in args.method:
-    PTES_logger.info('Reading containers... ')
-    PTES_logger.info('containers file: %s ' % args.genes)
-
-    gene_dict = defaultdict(list)
-    # open file with genes
-    with open(args.genes, 'r') as genes_file:
-        for line in genes_file:
-            line_list = line.strip().split()
-            chrom = line_list[0]
-            gene_interval = interval[int(line_list[1]), int(line_list[2])]
-            gene_dict[chrom].append(gene_interval)
-
-    # sort lists by gene length
-    interval_dict = {}
-    for key in gene_dict:   # key is chromosome
-        new_list = sorted(gene_dict[key], key=lambda x: get_interval_length(x))
-        interval_dict.update(choose_close(sorted_list=new_list))
-
-    PTES_logger.info('Reading containers... done')
-
 # Shuffling methods inside and outside:
 
 if 'inside' in args.method or 'outside' in args.method:
+    if 'outside' in args.method:
+        PTES_logger.info('Reading containers... ')
+        PTES_logger.info('containers file: %s ' % args.genes)
+
+        gene_dict = defaultdict(list)
+        # open file with genes
+        with open(args.genes, 'r') as genes_file:
+            for line in genes_file:
+                line_list = line.strip().split()
+                chrom = line_list[0]
+                gene_interval = interval[int(line_list[1]), int(line_list[2])]
+                gene_dict[chrom].append(gene_interval)
+
+        # sort lists by gene length
+        interval_dict = {}
+        for key in gene_dict:  # key is chromosome
+            new_list = sorted(gene_dict[key], key=lambda x: get_interval_length(x))
+            interval_dict.update(choose_close(sorted_list=new_list))
+
+        PTES_logger.info('Reading containers... done')
+
     PTES_logger.info('Creating intersection file... ')
 
-    intersection_name = args.features+'.intersect'
-    cmd = 'bedtools intersect -a %s -b %s -wo > %s/%s' % (args.features,
-                                                          args.genes,
-                                                          path_to_file,
-                                                          intersection_name,
-                                                          )
+    intersection_name = '%s/%s' % (random_folder, os.path.basename(args.features)+'.intersect')
+    cmd = 'bedtools intersect -a %s -b %s -wo > %s' % (args.features,
+                                                       args.genes,
+                                                       intersection_name,
+                                                       )
     shell_call(cmd)
     PTES_logger.info('Creating intersection file... done')
 
     PTES_logger.info('Reading intersection file and shuffling... ')
-    PTES_logger.info('intersection file: %s/%s' % (path_to_file, intersection_name))
+    PTES_logger.info('intersection file: %s' % intersection_name)
 
     if 'inside' in args.method:
         n_list_inside = np.empty((args.iterations, 0)).tolist()  # make list of 1000 empty lists
@@ -130,7 +130,7 @@ if 'inside' in args.method or 'outside' in args.method:
     if 'outside' in args.method:
         n_list_outside = np.empty((args.iterations, 0)).tolist()  # make list of 1000 empty lists
 
-    with open('%s/%s' % (path_to_file, intersection_name), 'r') as intersect_file:
+    with open(intersection_name, 'r') as intersect_file:
         for i, line in enumerate(intersect_file):
             line_list = line.strip().split()
             b_start = get_b_start(line)
@@ -146,14 +146,14 @@ if 'inside' in args.method or 'outside' in args.method:
                     n_list_inside[n].append(interval_to_bed_line(chrom=chrom1, one_interval=random_interval_inside))
 
                 if 'outside' in args.method:
+                    new_large_interval = random.choice(interval_dict[gene_interval]) # choose one of close by len genes
+                    relative_location = count_relative_location(small_i=b_interval,
+                                                                large_i=gene_interval)
                     random_interval_outside = randomize_interval(small_i=b_interval,
-                                                                 large_i=random.choice(interval_dict[gene_interval]))
+                                                                 large_i= new_large_interval,
+                                                                 same_location=True,
+                                                                 p=relative_location)
                     n_list_outside[n].append(interval_to_bed_line(chrom=chrom1, one_interval=random_interval_outside))
-                    if i == 0 and n < 2:
-                        print gene_interval
-                        print random.choice(interval_dict[gene_interval])
-                        print random_interval_outside
-                        print interval_to_bed_line(chrom=chrom1, one_interval=random_interval_outside)
 
 # outputting
     for n in range(args.iterations):
