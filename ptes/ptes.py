@@ -386,16 +386,20 @@ def star_line_dict(line):
     return read_attrs
 
 
-def randomize_interval(small_i, large_i, same_location=False, p=None, threshold=10):
+def randomize_interval(small_i, large_i,
+                       small_i_strand=".", large_i_strand=".",
+                       same_position=False, p=None, threshold=10):
     """
     Takes two intervals: feature (small interval) and container (large interval)
     Randomly moves feature inside container;
     Doesn't change size of small interval;
     For feature [a, b] and container [x, y]:
     P = (a-x)/((y-x)-(b-a))
-    :param small_i: small interval
-    :param large_i: large interval
-    :param same_location: request approx. same distance from both ends
+    :param small_i: feature, small interval
+    :param large_i: container, large interval
+    :param small_i_strand: strand of small interval, "+", "-" or "."
+    :param large_i_strand: strand of large interval, "+", "-" or "."
+    :param same_position: request approx. same distance from both ends
     :param p: distance from both ends; 0 < p < 1\
     if None with same_distance==True than will be calculated from feature and container
     :param threshold: threshold for approx.
@@ -410,13 +414,14 @@ def randomize_interval(small_i, large_i, same_location=False, p=None, threshold=
         right_edge = int(large_i[0].sup) - small_i_len
         y = int(large_i[0].sup)
         a = int(small_i[0].inf)
-        if not same_location:
+        if not same_position:
             new_inf = random.randint(x, right_edge)
         else:
             if not p:
-                p = count_relative_location(small_i, large_i)
+                p = count_relative_position(feature=small_i,
+                                            container=large_i)
                 if p == -1:
-                    return small_i  # you request location for non-intersecting intervals without p
+                    return small_i  # you request location for non-intersecting intervals without p :(
 
             a = x + int(p * (large_i_len - small_i_len))
             new_inf = random.randint(max(x, a - threshold), min(right_edge, a + threshold))
@@ -426,28 +431,33 @@ def randomize_interval(small_i, large_i, same_location=False, p=None, threshold=
         return small_i
 
 
-def count_relative_location(small_i, large_i):
+def count_relative_position(feature, container, feature_strand=".", container_strand="."):
     """
     Takes two intersecting intervals: feature (small interval) and container (large interval)
     For feature [a, b] and container [x, y]:
     P = (a-x)/((y-x)-(b-a))
-    :param small_i: small interval
-    :param large_i: large interval
+    :param feature: small interval
+    :param container: large interval
+    :param feature_strand: strand of small interval, "+", "-" or "."
+    :param container_strand: strand of large interval, "+", "-" or "."
     :return: p, float in [0,1], or -1 for non-intersecting intervals
     """
-    small_i = one_interval(small_i)
-    large_i = one_interval(large_i)
-    if small_i & large_i != interval():
-        a = int(small_i[0].inf)
-        x = int(large_i[0].inf)
-        b = int(small_i[0].sup)
-        y = int(large_i[0].sup)
+    feature = one_interval(feature)
+    container = one_interval(container)
+    if feature & container != interval():
+        a = int(feature[0].inf)
+        x = int(container[0].inf)
+        b = int(feature[0].sup)
+        y = int(container[0].sup)
         if a < x:
             a = x
         if b > y:
             b = y
         p = float((a - x)) / float(((y - x) - (b - a)))
-        return p
+        if container_strand == "-":
+            return float(1) - p
+        else:
+            return p
     else:
         return -1
 

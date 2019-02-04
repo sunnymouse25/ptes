@@ -16,7 +16,7 @@ import numpy as np
 
 from ptes.constants import PTES_logger
 from ptes.lib.general import shell_call, make_dir
-from ptes.ptes import interval_to_string, randomize_interval, get_b_start, get_interval_length, count_relative_location
+from ptes.ptes import interval_to_string, randomize_interval, get_b_start, get_interval_length, count_relative_position
 
 ### Arguments
 
@@ -137,22 +137,30 @@ if 'inside' in args.method or 'outside' in args.method:
             if not b_start:
                 continue
             chrom1 = line_list[0]
-            b_interval = interval[int(line_list[1]), int(line_list[2])]
+            feature_interval = interval[int(line_list[1]), int(line_list[2])]
             gene_interval = interval[int(line_list[b_start + 1]), int(line_list[b_start + 2])]
 
             for n in range(args.iterations):
                 if 'inside' in args.method:
-                    random_interval_inside = randomize_interval(small_i=b_interval, large_i=gene_interval)
+                    random_interval_inside = randomize_interval(small_i=feature_interval, large_i=gene_interval)
                     n_list_inside[n].append(interval_to_bed_line(chrom=chrom1, one_interval=random_interval_inside))
 
                 if 'outside' in args.method:
                     new_large_interval = random.choice(interval_dict[gene_interval]) # choose one of close by len genes
-                    relative_location = count_relative_location(small_i=b_interval,
-                                                                large_i=gene_interval)
-                    random_interval_outside = randomize_interval(small_i=b_interval,
-                                                                 large_i= new_large_interval,
-                                                                 same_location=True,
-                                                                 p=relative_location)
+                    feature_len = get_interval_length(feature_interval)
+                    gene_len = get_interval_length(gene_interval)
+                    if feature_len <= gene_len:
+                        relative_position = count_relative_position(feature=feature_interval,
+                                                                    container=gene_interval)
+                        random_interval_outside = randomize_interval(small_i=feature_interval,
+                                                                     large_i= new_large_interval,
+                                                                     same_position=True,
+                                                                     p=relative_position)
+                    else:
+                        random_interval_outside = randomize_interval(small_i=feature_interval,
+                                                                     large_i=new_large_interval,
+                                                                     same_position=False,
+                                                                     )
                     n_list_outside[n].append(interval_to_bed_line(chrom=chrom1, one_interval=random_interval_outside))
 
 # outputting

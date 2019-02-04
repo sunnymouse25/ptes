@@ -306,12 +306,12 @@ class TestPtes(unittest.TestCase):
             True,
         ]
         for i, tuple in enumerate(interval_lists):
-            res_int = ptes.randomize_interval(small_i=tuple[0], large_i=tuple[1], same_location=True)
+            res_int = ptes.randomize_interval(small_i=tuple[0], large_i=tuple[1], same_position=True)
             res_bool = res_int in interval[1, 100]
             print res_int, res_bool
 #            self.assertEqual(res_bool, exp_list[i])
 
-    def test_count_relative_location(self):
+    def test_count_relative_position(self):
         interval_lists = [
             [interval([-10, 10]), interval([1.0, 100.0])],
             [interval([-10, 1]), interval([1.0, 100.0])],
@@ -324,7 +324,7 @@ class TestPtes(unittest.TestCase):
             [interval([150, 200]), interval([1.0, 100.0])],
         ]
         for i, tuple in enumerate(interval_lists):
-            res_int = ptes.count_relative_location(small_i=tuple[0], large_i=tuple[1])
+            res_int = ptes.count_relative_position(feature=tuple[0], container=tuple[1])
             print res_int
 
 if __name__ == "__main__":

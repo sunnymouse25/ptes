@@ -259,6 +259,8 @@ if not args.list:
 PTES_logger.info('Creating reads dataframe...')
 chim_junc_df.to_csv('%s/chim_junc_df.csv' % path_to_file, sep='\t')
 filtering_rule = 'consensus=="GT/AG" & chim_dist < 10000 & mate_dist < 10000'
+
+
 df_new = chim_junc_df.query(filtering_rule)
 df_new['annot'] = df_new.annot_acceptor + df_new.annot_donor
 z = df_new.groupby(['chrom', 'chain', 'donor', 'acceptor', 'type', 'annot']).size().reset_index(name='counts')
@@ -304,6 +306,9 @@ num = 0
 for key, value in zz.iterrows():   # unique chimeric junctions
     chrom = key[0]  # key is (chrom, chain, donor_ss, acceptor_ss)
     chain = key[1]
+    donor_ss = key[2]
+    acceptor_ss = key[3]
+
     windows_min = []
     windows_max = []
     codes = []
@@ -327,27 +332,30 @@ for key, value in zz.iterrows():   # unique chimeric junctions
                               name='%s_%s_mate2' % (code, mate_type),
                               color='b')
         code_line = '\t'.join(map(str, [  # one description for junction
-            value.inside,
-            value.outside,
+            chrom,
+            chain,
+            donor_ss,
+            acceptor_ss,
+            mate_type,
             annot_table.loc[key].annot,
-            id_table.loc[key].id_counts,
+            id_table.loc[key].id_counts,   # n_samples
             code,
         ]
                                   )
                               )
-        code_list.append(code_line + '\n')
-        # Making BED file with one row for pair of mates
+        code_list.append(code_line)
+        # Making BED file with one row for the pair of mates
         single_track = get_single_track([chim1, chim2, nonchim],
                                         {'chrom': chrom,
                                          'chain': chain,
                                          'name': '%s_%s' % (code, mate_type),
                                          'color': '255,0,255'}) # for checking in GB that intervals are same
-        single_list.append('\t'.join(single_track) + '\n')
+        single_list.append('\t'.join(single_track))
 
         for track_list in [bed1, bed2, bed3]:
             windows_min.append(int(track_list[1]))  # track_list[1] is chromStart, track_list[2] is chromEnd
             windows_max.append(int(track_list[2]))
-            bed_line = '\t'.join(track_list) + '\n'
+            bed_line = '\t'.join(track_list)
             bed_list.append(bed_line)
 
     window = (chrom,   # one window for junction
@@ -362,30 +370,28 @@ for key, value in zz.iterrows():   # unique chimeric junctions
                                     ]
                                 )
                             )
-    coord_list.append('%s:%i-%i\t' % window + description + '\n')
+    coord_list.append('%s:%i-%i\t' % window + description)
 
 
 PTES_logger.info('Making BED files... done')
 
 PTES_logger.info('Writing BED files...')
 with open('%s/%s' % (folder_name, bed_name), 'w') as bed_file, \
+        open('%s/%s' % (folder_name, single_name), 'w') as single_bed_file, \
         open('%s/%s' % (folder_name, coord_name), 'w') as coord_file, \
-        open('%s/%s' % (folder_name, code_name), 'w') as code_file, \
-        open('%s/%s' % (folder_name, single_name), 'w') as single_bed_file:
-    for track_list in bed_list:
-        bed_file.write(track_list)
+        open('%s/%s' % (folder_name, code_name), 'w') as code_file:
+    bed_file.write('\n'.join(bed_list))
+    single_bed_file.write('\n'.join(single_list))
+
     coord_file.write('\t'.join(
         ['#window', 'inside', 'outside', 'annot', 'n_samples', 'codes']
     ) + '\n')
-    for coord in coord_list:
-        coord_file.write(coord)
+    coord_file.write('\n'.join(coord_list))
+
     code_file.write('\t'.join(
-        ['#inside', 'outside', 'annot', 'n_samples', 'code']
+        ['#chrom', 'chain', 'donor', 'acceptor', 'type', 'annot', 'n_samples', 'code']
     ) + '\n')
-    for code_line in code_list:
-        code_file.write(code_line)
-    for track_list in single_list:
-        single_bed_file.write(track_list)
+    code_file.write('\n'.join(code_list))
 
 PTES_logger.info('Writing BED files... done')
 
@@ -399,10 +405,10 @@ if args.sort:
 
     PTES_logger.info('Sorting BED files... done')
 
-if args.bigbed:
-    PTES_logger.info('Making bigBed...')
-    to_bigbed(bed_name=bed_name, folder_name=folder_name)
-    to_bigbed(bed_name=single_name, folder_name=folder_name)
-    PTES_logger.info('Making bigBed... done')
+    if args.bigbed:   # sorting before is necessary
+        PTES_logger.info('Making bigBed...')
+        to_bigbed(bed_name=bed_name, folder_name=folder_name)
+        to_bigbed(bed_name=single_name, folder_name=folder_name)
+        PTES_logger.info('Making bigBed... done')
 
 
