@@ -4,6 +4,8 @@ import random
 from interval import interval
 import numpy as np
 
+from constants import PTES_logger
+
 
 def order_cigar(row):
     """
@@ -135,10 +137,10 @@ def actual_exon_numbers(exons):
 
 def get_subseq(genome, strand, chrom, s1,e1):  #cut from genome by 1-based coordinates
     if strand == '+':
-        seq = genome[chrom].seq[s1-1:e1-1]
+        return genome[chrom].seq[s1-1:e1-1]
     elif strand == '-':
-        seq = genome[chrom].seq[s1-1:e1-1].reverse_complement()
-    return seq   
+        return genome[chrom].seq[s1-1:e1-1].reverse_complement()
+    return None
     
 def splice_letters(genome, strand, chr, i1, i2):   
     '''
@@ -157,10 +159,12 @@ def splice_letters(genome, strand, chr, i1, i2):
     return str(donor_ss), str(acceptor_ss)       
 
 def split_by_p(read_dict):
-    '''
+    """
     Takes read_dict (OrderedDict),
     returns list of dicts: before p and after p
-    '''
+    :param read_dict: OrderedDict
+    :return: list of dicts
+    """
     items = read_dict.items()
     for i, item in enumerate(items):
         if 'p' in item[0]:
@@ -337,13 +341,13 @@ def get_junctions(chrom, chain, values, gtf_donors, gtf_acceptors):
         annot_donor = 1 if donor_ss in donors else 0
         annot_acceptor = 1 if acceptor_ss in acceptors else 0
         junc_list.append({'n_junctions': n_j,
-                'chrom': chrom,
-                'chain': chain,
-                'donor': str(donor_ss),
-                'annot_donor': annot_donor,
-                'acceptor': str(acceptor_ss),
-                'annot_acceptor': annot_acceptor,
-                'chimeric': chimeric})
+                          'chrom': chrom,
+                          'chain': chain,
+                          'donor': str(donor_ss),
+                          'annot_donor': annot_donor,
+                          'acceptor': str(acceptor_ss),
+                          'annot_acceptor': annot_acceptor,
+                          'chimeric': chimeric})
     return junc_list
 
 
@@ -382,23 +386,99 @@ def star_line_dict(line):
     return read_attrs
 
 
-def randomize_interval(small_i, large_i):
+def randomize_interval(small_i, large_i,
+                       small_i_strand=".", large_i_strand=".",
+                       same_position=False, p=None, threshold=10):
     """
-    Takes two intervals
-    Randomly moves small interval inside large interval
-    Doesn't change size of small interval
-    :param small_i: small interval
-    :param large_i: large interval
+    Takes two intervals: feature (small interval) and container (large interval)
+    Randomly moves feature inside container;
+    Doesn't change size of small interval;
+    For feature [a, b] and container [x, y]:
+    P = (a-x)/((y-x)-(b-a))
+    :param small_i: feature, small interval
+    :param large_i: container, large interval
+    :param small_i_strand: strand of small interval, "+", "-" or "."
+    :param large_i_strand: strand of large interval, "+", "-" or "."
+    :param same_position: request approx. same distance from both ends
+    :param p: distance from both ends; 0 < p < 1\
+    if None with same_distance==True than will be calculated from feature and container
+    :param threshold: threshold for approx.
     :return: New coordinates of small interval
     """
     small_i = one_interval(small_i)
     large_i = one_interval(large_i)
     small_i_len = get_interval_length(small_i)
-    if small_i in large_i:
-        left_edge = int(large_i[0].inf)
-        right_edge = int(large_i[0].sup)-small_i_len
-        new_inf = random.randint(left_edge, right_edge)
-        new_i = interval[new_inf, new_inf+small_i_len-1]
+    large_i_len = get_interval_length(large_i)
+    if small_i_len < large_i_len:
+        x = int(large_i[0].inf)
+        right_edge = int(large_i[0].sup) - small_i_len
+        y = int(large_i[0].sup)
+        a = int(small_i[0].inf)
+        if not same_position:
+            new_inf = random.randint(x, right_edge)
+        else:
+            if not p:
+                p = count_relative_position(feature=small_i,
+                                            container=large_i,
+                                            container_strand=large_i_strand)
+                if p == -1:
+                    return small_i  # you request location for non-intersecting intervals without p :(
+            if p:
+                if large_i_strand == '-':
+                    p = float(1) - p
+            a = x + int(p * (large_i_len - small_i_len))
+            new_inf = random.randint(max(x, a - threshold), min(right_edge, a + threshold))
+        new_i = interval[new_inf, new_inf + small_i_len - 1]
         return new_i
     else:
         return small_i
+
+
+def count_relative_position(feature, container, feature_strand=".", container_strand="."):
+    """
+    Takes two intersecting intervals: feature (small interval) and container (large interval)
+    For feature [a, b] and container [x, y]:
+    P = (a-x)/((y-x)-(b-a))
+    :param feature: small interval
+    :param container: large interval
+    :param feature_strand: strand of small interval, "+", "-" or "."
+    :param container_strand: strand of large interval, "+", "-" or "."
+    :return: p, float in [0,1], or -1 for non-intersecting intervals
+    """
+    feature = one_interval(feature)
+    container = one_interval(container)
+    if feature & container != interval():
+        a = int(feature[0].inf)
+        x = int(container[0].inf)
+        b = int(feature[0].sup)
+        y = int(container[0].sup)
+        if a < x:
+            a = x
+        if b > y:
+            b = y
+        p = float((a - x)) / float(((y - x) - (b - a)))
+        if container_strand == "-":
+            return float(1) - p
+        else:
+            return p
+    else:
+        return -1
+
+
+def get_b_start(row, logger=PTES_logger):
+    """
+    Takes bedtools intersect -wo output, finds start of B-feature
+    :param row: row of bedtools intersect -wo output
+    :param logger: logger
+    :return: number of element where B-feature starts, integer
+    """
+    line_list = row.strip().split()
+    chrom1 = line_list[0]
+    for i, elm in enumerate(line_list[3:], start=3):
+        if elm == chrom1:
+            b_start = i  # number of field where feature B starts
+            return b_start
+    logger.warning(','.join(line_list))
+    logger.error('Feature B start not found, skipping row...')
+    logger.warning('Have you passed the right file as input?')
+    return None

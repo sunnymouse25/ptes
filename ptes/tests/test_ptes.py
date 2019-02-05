@@ -293,20 +293,39 @@ class TestPtes(unittest.TestCase):
     def test_randomize_interval(self):
         interval_lists = [
             [interval([10, 20]), interval([1.0, 100.0])],
-            [interval([100, 200]), interval([1.0, 100.0])],
-            [interval([101, 200]), interval([1.0, 100.0])],
+            [interval([20, 10]), interval([1.0, 100.0])],
+            [interval([200, 1000]), interval([1.0, 100.0])],
+            [interval([150, 200]), interval([1.0, 100.0])],
+            [interval([181, 200]), interval([1.0, 100.0])],
         ]
-        exp_lists = [
-            [interval([4300.0, 4349.0]), interval([4000.0, 4099.0])],
-            [interval([4000.0, 4099.0]), interval([4300.0, 4349.0])],
-            [interval([3050.0, 3149.0]), interval([4000.0, 4099.0])],
-            [interval([4000.0, 4099.0]), interval([3050.0, 3149.0])],
+        exp_list = [
+            True,
+            True,
+            False,
+            True,
+            True,
         ]
         for i, tuple in enumerate(interval_lists):
-            res_list = ptes.randomize_interval(small_i=tuple[0], large_i=tuple[1])
-            print res_list
-            #self.assertIn(res_list, interval[1, 100])
+            res_int = ptes.randomize_interval(small_i=tuple[0], large_i=tuple[1], same_position=True)
+            res_bool = res_int in interval[1, 100]
+            print res_int, res_bool
+#            self.assertEqual(res_bool, exp_list[i])
 
+    def test_count_relative_position(self):
+        interval_lists = [
+            [interval([-10, 10]), interval([1.0, 100.0])],
+            [interval([-10, 1]), interval([1.0, 100.0])],
+            [interval([10, 20]), interval([1.0, 100.0])],
+            [interval([90, 99]), interval([1.0, 100.0])],
+            [interval([90, 100]), interval([1.0, 100.0])],
+            [interval([20, 10]), interval([1.0, 100.0])],
+            [interval([90, 199]), interval([1.0, 100.0])],
+            [interval([200, 1000]), interval([1.0, 100.0])],
+            [interval([150, 200]), interval([1.0, 100.0])],
+        ]
+        for i, tuple in enumerate(interval_lists):
+            res_int = ptes.count_relative_position(feature=tuple[0], container=tuple[1])
+            print res_int
 
 if __name__ == "__main__":
     unittest.main()

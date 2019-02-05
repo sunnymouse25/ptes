@@ -34,7 +34,7 @@ def run_command(command):   # to read from bash stdout
 
 
 def shell_call(command):
-    subprocess.call(command, shell = True)    
+    subprocess.call(command, shell=True)
 
 
 def init_file(filename, folder = './'):   # make new empty file
