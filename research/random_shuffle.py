@@ -95,6 +95,7 @@ if 'inside' in args.method or 'outside' in args.method:
         PTES_logger.info('containers file: %s ' % args.genes)
 
         gene_dict = defaultdict(list)
+        strand_dict = {}
         # open file with genes
         with open(args.genes, 'r') as genes_file:
             for line in genes_file:
@@ -102,6 +103,13 @@ if 'inside' in args.method or 'outside' in args.method:
                 chrom = line_list[0]
                 gene_interval = interval[int(line_list[1]), int(line_list[2])]
                 gene_dict[chrom].append(gene_interval)
+                try:
+                    strand = line_list[5]
+                    strand_dict[gene_interval] = strand
+                except IndexError:
+                    strand_dict[gene_interval] = '.'
+                    PTES_logger.error('No strand found')
+                    PTES_logger.error('BED6 format is required for choosing strand-specific position')
 
         # sort lists by gene length
         interval_dict = {}
@@ -146,16 +154,30 @@ if 'inside' in args.method or 'outside' in args.method:
                     n_list_inside[n].append(interval_to_bed_line(chrom=chrom1, one_interval=random_interval_inside))
 
                 if 'outside' in args.method:
-                    new_large_interval = random.choice(interval_dict[gene_interval]) # choose one of close by len genes
+                    new_large_interval = random.choice(interval_dict[gene_interval])  # choose one of close by len genes
+                    new_strand = strand_dict[new_large_interval]
                     feature_len = get_interval_length(feature_interval)
                     gene_len = get_interval_length(gene_interval)
                     if feature_len <= gene_len:
-                        relative_position = count_relative_position(feature=feature_interval,
-                                                                    container=gene_interval)
-                        random_interval_outside = randomize_interval(small_i=feature_interval,
-                                                                     large_i= new_large_interval,
-                                                                     same_position=True,
-                                                                     p=relative_position)
+                        try:
+                            container_strand = line_list[b_start + 5]
+                            relative_position = count_relative_position(feature=feature_interval,
+                                                                        container=gene_interval,
+                                                                        container_strand=container_strand)
+                            random_interval_outside = randomize_interval(small_i=feature_interval,
+                                                                         large_i=new_large_interval,
+                                                                         large_i_strand=new_strand,
+                                                                         same_position=True,
+                                                                         p=relative_position)
+                        except IndexError:
+                            PTES_logger.error('No strand found')
+                            PTES_logger.error('BED6 format is required for choosing strand-specific position')
+                            relative_position = count_relative_position(feature=feature_interval,
+                                                                        container=gene_interval)
+                            random_interval_outside = randomize_interval(small_i=feature_interval,
+                                                                         large_i= new_large_interval,
+                                                                         same_position=True,
+                                                                         p=relative_position)
                     else:
                         random_interval_outside = randomize_interval(small_i=feature_interval,
                                                                      large_i=new_large_interval,
@@ -163,7 +185,8 @@ if 'inside' in args.method or 'outside' in args.method:
                                                                      )
                     n_list_outside[n].append(interval_to_bed_line(chrom=chrom1, one_interval=random_interval_outside))
 
-# outputting
+    PTES_logger.info('Reading intersection file and shuffling... done')
+    PTES_logger.info('Creating output files... ')
     for n in range(args.iterations):
         if 'inside' in args.method:
             out_name = random_folder + '/%s_%i.bed' % ('inside', n)
@@ -175,7 +198,7 @@ if 'inside' in args.method or 'outside' in args.method:
             with open(out_name, 'w') as out_file:
                 out_file.write('\n'.join(n_list_outside[n]))
 
-PTES_logger.info('Reading intersection file and shuffling... done')
+PTES_logger.info('Creating output files... done')
 
 # Shuffling method 3
 PTES_logger.info('Running bedtools shuffle... ')

@@ -36,9 +36,9 @@ args = parser.parse_args()
 make_dir(args.output)
 path_to_file = args.output.rstrip('/')
 
-junc_bed_name = '%s.junctions.bed' % args.tag  # for unique junctions
+unique_bed_name = '%s.unique.bed' % args.tag  # for unique junctions
 single_bed_name = '%s.single.bed' % args.tag   # single line for one chimeric junction
-single_junc_bed_name = '%s.single.junctions.bed' % args.tag  # for unique junctions, single line for one junction
+single_unique_bed_name = '%s.single.unique.bed' % args.tag  # for unique junctions, single line for one junction
 
 folder_name, bed_name, coord_name = make_bed_folder(
     prefix=args.tag,
@@ -146,21 +146,21 @@ PTES_logger.info('Converted successfully: %i rows' % len(coord_list))
 PTES_logger.info('Writing BED files...')
 with open('%s/%s' % (folder_name, bed_name), 'w') as bed_file, \
         open('%s/%s' % (folder_name, coord_name), 'w') as coord_file, \
-        open('%s/%s' % (folder_name, junc_bed_name), 'w') as junc_bed_file,\
-        open('%s/%s' % (folder_name, single_junc_bed_name), 'w') as single_junc_bed_file,\
+        open('%s/%s' % (folder_name, unique_bed_name), 'w') as unique_bed_file,\
+        open('%s/%s' % (folder_name, single_unique_bed_name), 'w') as single_unique_bed_file,\
         open('%s/%s' % (folder_name, single_bed_name), 'w') as single_bed_file:
     bed_file.write('\n'.join(bed_list))
     coord_file.write('\n'.join(coord_list))
     for key, value in junc_dict.items():
-        junc_bed_file.write('\n'.join(list(value)))
+        unique_bed_file.write(value[0]+'\n'+value[1]+'\n')
     single_bed_file.write('\n'.join(single_list))
-    single_junc_bed_file.write('\n'.join(single_junc_list))
+    single_unique_bed_file.write('\n'.join(single_junc_list))
 
 PTES_logger.info('Writing BED files... done')
 
 if args.sort:
     PTES_logger.info('Sorting BED files...')
-    for filename in [bed_name, junc_bed_name, single_bed_name, single_junc_bed_name]:
+    for filename in [bed_name, unique_bed_name, single_bed_name, single_unique_bed_name]:
         shell_call('cat %s/%s | sort -k1,1 -k2,2n  > %s/%s.sorted' % (folder_name,
                                                                       filename,
                                                                       folder_name,

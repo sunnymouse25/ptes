@@ -419,10 +419,13 @@ def randomize_interval(small_i, large_i,
         else:
             if not p:
                 p = count_relative_position(feature=small_i,
-                                            container=large_i)
+                                            container=large_i,
+                                            container_strand=large_i_strand)
                 if p == -1:
                     return small_i  # you request location for non-intersecting intervals without p :(
-
+            if p:
+                if large_i_strand == '-':
+                    p = float(1) - p
             a = x + int(p * (large_i_len - small_i_len))
             new_inf = random.randint(max(x, a - threshold), min(right_edge, a + threshold))
         new_i = interval[new_inf, new_inf + small_i_len - 1]

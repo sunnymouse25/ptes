@@ -1,3 +1,5 @@
+# Run at /home/sunnymouse/projects/PTES/panhandles
+
 import pandas as pd
 import numpy as np
 
@@ -6,7 +8,7 @@ all_circles = pd.read_csv('all_circles/bed/all_Chimeric.single.bed.sorted', sep=
 cols = ['chrom','start','end','name','score','chain','th_start','th_end','color','blocks','lens','starts']
 all_circles.columns = cols
 
-junc = pd.read_csv('../ENCODE/junctions.csv', sep='\t', index_col = 0)
+junc = pd.read_csv('../ENCODE/chim_types.csv', sep='\t', index_col = 0)
 
 inside_list = []
 inside_list_unique = []
@@ -25,7 +27,7 @@ for i, row in all_circles.iterrows():
     name_list = name.split('_')
     donor_ss = name_list[1]
     acceptor_ss = name_list[2]
-    q = junc.head(n=2000).query('chrom == "%s" & donor == %s & acceptor == %s' % (chrom, donor_ss, acceptor_ss))
+    q = junc.query('chrom == "%s" & donor == %s & acceptor == %s' % (chrom, donor_ss, acceptor_ss))
     if q.shape[0] > 0:
         if q['outside'].any() > 0:
             outside_list.append(row)
