@@ -15,9 +15,9 @@ setup(
         ],
     entry_points={
             'console_scripts': [
-                "ptes.random_shuffle = ptes.research.random_shuffle:main",
-                "ptes.bed_to_overlaps = ptes.research.bed_to_overlaps:main",
-                "ptes.star_chim_to_bed = ptes.research.star_chim_to_bed:main",
+                "ptes.random_shuffle = ptes.panhandles.random_shuffle:main",
+                "ptes.bed_to_overlaps = ptes.panhandles.bed_to_overlaps:main",
+                "ptes.star_chim_to_bed = ptes.panhandles.star_chim_to_bed:main",
 
             ]
       }
