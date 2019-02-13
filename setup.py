@@ -12,5 +12,13 @@ setup(
         'pyinterval>=1.2.0',
         'pyaml',
         'matplotlib>=2.2.2',
-        ]
+        ],
+    entry_points={
+            'console_scripts': [
+                "ptes.random_shuffle = ptes.research.random_shuffle:main",
+                "ptes.bed_to_overlaps = ptes.research.bed_to_overlaps:main",
+                "ptes.star_chim_to_bed = ptes.research.star_chim_to_bed:main",
+
+            ]
+      }
     )

@@ -43,7 +43,7 @@ make_dir(args.output)
 path_to_file = args.output.rstrip('/')
 PTES_logger.info('Creating intersection file... ')
 intersection_name = '%s/%s' % (path_to_file, os.path.basename(args.features)+'.intersect')
-cmd = 'bedtools intersect -a %s -b %s -wo > %s' % (args.features,
+cmd = 'bedtools intersect -a %s -b %s -s -wo > %s' % (args.features,
                                                    args.genes,
                                                    intersection_name,
                                                     )
@@ -137,7 +137,7 @@ ax3.set_ylim(0, 1000000)
 ax32.set(title='Containers length')
 
 #fig.tight_layout()
-plt.savefig('%s/%s_relative_location.png' % (path_to_file, args.prefix))
+plt.savefig('%s/%s_relative_position.png' % (path_to_file, args.prefix))
 
 PTES_logger.info('Plotting... done')
 
