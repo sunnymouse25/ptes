@@ -4,13 +4,13 @@
 # Runs randomizing of B inside B's genes:
 # bedtools intersect -a B_FEATURE -b GENES_NO_INTERSECTION -wo > output
 # Plots histogram for number of random intersections with real value
+# TODO: pretty histograms
 
 # Imports
 from collections import defaultdict
 import argparse
 
 from interval import interval
-import pandas as pd
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
@@ -27,7 +27,7 @@ def return_category(a_interval, b_interval, logger=PTES_logger):
     :param a_interval: type 'interval'
     :param b_interval: type 'interval'
     :param logger: logger
-    :return: category
+    :return: category from categories = ['a_in_b', 'b_in_a', 'overlap', 'unknown', 'no_overlap']
     """
     union = a_interval | b_interval
     intersection = a_interval & b_interval
@@ -54,28 +54,20 @@ def parse_bedtools_wo(wo_outfile, logger=PTES_logger):
     :param logger: logger
     :return: dict from pivot table: A_feature - N intersections for each category
     """
-    df_list = []  # for lines to output
+    categories = ['a_in_b', 'b_in_a', 'overlap', 'unknown', 'no_overlap']
+    df_dict = dict.fromkeys(categories, 0)  # for output
     with open(wo_outfile, 'r') as input_file:
         for line in input_file:
             line_list = line.strip().split()
             b_start = get_b_start(line, logger)
+            if not b_start:
+                continue
             a_interval = interval[int(line_list[1]), int(line_list[2])]
             b_interval = interval[int(line_list[b_start + 1]), int(line_list[b_start + 2])]
             category = return_category(a_interval=a_interval,
                                         b_interval=b_interval)
-            output_list = line_list[:3] + [category]
-            df_list.append(output_list)
-    df = pd.DataFrame(df_list)
-    df.columns = ['chrom', 'start', 'end', 'category']
-
-    z = df.groupby(['chrom', 'start', 'end', 'category']).size().reset_index(name='counts')
-    zz = z.pivot_table(index=['chrom', 'start', 'end'], columns=['category'], values='counts', fill_value=0)
-    col_list = zz.columns.tolist()
-    for cat in ['a_in_b', 'b_in_a', 'overlap']:
-        if cat not in col_list:
-            zz[cat] = 0
-    zz_dict = {k: v.tolist() for k, v in zz.iterrows()}
-    return zz_dict
+            df_dict[category] += 1
+    return df_dict
 
 # Main
 
@@ -84,7 +76,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", type=str,
-                        help="BED file, bedtools intersect -wa -wb output")
+                        help="BED file, bedtools intersect -wo output")
     parser.add_argument("-o", "--output", type=str,
                         help="Output folder for results")
     parser.add_argument("-a", "--afeature", type=str,

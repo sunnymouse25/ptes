@@ -23,7 +23,7 @@ from ptes.ptes import randomize_interval, get_b_start, get_interval_length, coun
 
 def interval_to_bed_line(chrom, single_interval, name='.', score=0, strand='.'):
     """
-    From interval to TAB-delimited line for .BED file
+    From interval to TAB-delimited line for .BED6 file
     :param chrom: chromosome
     :param single_interval: interval object with only one component
     :param name: name as in BED6

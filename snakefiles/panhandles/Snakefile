@@ -52,7 +52,7 @@ rule circles_in_genes:
         "bed/all_Chimeric_in_genes.bed"    
     shell:
         "cat {input.circles} | awk '$3-$2 <= 100000' | "
-        "bedtools intersect -a - -b {input.genes} -wa > {output}"
+        "bedtools intersect -a - -b {input.genes} -s -wa > {output}"
 
 
 rule circles_with_genes:
@@ -62,7 +62,7 @@ rule circles_with_genes:
     output:
         "bed/all_Chimeric_with_genes.bed"    
     shell:        
-        "bedtools intersect -a {input.in_genes} -b {input.genes} -wo > {output}"
+        "bedtools intersect -a {input.in_genes} -b {input.genes} -s -wo > {output}"
 
 
 rule panhandles_in_genes:
@@ -72,7 +72,7 @@ rule panhandles_in_genes:
     output:
         "bed/panhandles_in_genes.bed"    
     shell:        
-        "bedtools intersect -a {input.panhandles} -b {input.genes} -wa > {output}"
+        "bedtools intersect -a {input.panhandles} -b {input.genes} -s -wa > {output}"
 
 
 rule panhandles_with_genes:
@@ -82,7 +82,7 @@ rule panhandles_with_genes:
     output:
         "bed/panhandles_with_genes.bed"    
     shell:        
-        "bedtools intersect -a {input.panhandles} -b {input.genes} -wo > {output}"
+        "bedtools intersect -a {input.panhandles} -b {input.genes} -s -wo > {output}"
 
 
 rule circles_with_panhandles:
@@ -92,7 +92,7 @@ rule circles_with_panhandles:
     output:
         "bed/all_Chimeric_panhandles.bed"    
     shell:
-        "bedtools intersect -a {input.a_file} -b {input.b_file} -wo > {output}"
+        "bedtools intersect -a {input.a_file} -b {input.b_file} -s -wo > {output}"
 
 
 rule panhandles_with_circles:
@@ -102,7 +102,7 @@ rule panhandles_with_circles:
     output:
         "bed/panhandles_all_Chimeric.bed"    
     shell:
-        "bedtools intersect -a {input.a_file} -b {input.b_file} -wo > {output}"
+        "bedtools intersect -a {input.a_file} -b {input.b_file} -s -wo > {output}"
 
 
 rule random_shuffle:
