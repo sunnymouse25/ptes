@@ -107,7 +107,7 @@ rule panhandles_with_circles:
 
 rule random_shuffle:
     input:
-        features = "bed/panhandles_in_genes.bed",
+        features = config["panhandles"],
         genes = "bed/hg19_genes_coding_no_overlap.bed",
     output:
         temp(directory("random")),
@@ -120,13 +120,15 @@ rule random_shuffle:
     conda:
         config["env"]
     shell:
-        "ptes.random_shuffle -m {params.methods} -c {params.closest} -f {input.features} -g {input.genes}  -iter {params.iter} -o {params.folder} -s {params.chrom_sizes} "
+        "ptes.random_shuffle -m {params.methods} -c {params.closest} -f {input.features} -g {input.genes} "
+        " -iter {params.iter} -o {params.folder} -s {params.chrom_sizes} "
 
 
 rule bed_to_overlaps:
     input:
         input = "bed/all_Chimeric_panhandles.bed",                
-        random_dir = directory("random"),        
+        random_dir = directory("random"),
+        circles = "bed/all_Chimeric.single.bed.sorted",
     output:
         expand("histograms_{method}.png", method=config["methods"]),       
     params: 
@@ -136,12 +138,13 @@ rule bed_to_overlaps:
     conda:
         config["env"]
     shell:
-        "ptes.bed_to_overlaps -m {params.methods} -i {input.input} -iter {params.iter} -o {params.folder} -a circles -b panhandles "
+        "ptes.bed_to_overlaps -m {params.methods} -i {input.input} -f {input.circles}"
+        "-iter {params.iter} -o {params.folder} -a circles -b panhandles "
 
 
 rule random_shuffle_backwards:
     input:
-        features = "bed/all_Chimeric_in_genes.bed" ,
+        features = "bed/all_Chimeric.single.bed.sorted",
         genes = "bed/hg19_genes_coding_no_overlap.bed",
     output:
         temp(directory("backwards/random")),
@@ -154,13 +157,15 @@ rule random_shuffle_backwards:
     conda:
         config["env"]
     shell:
-        "ptes.random_shuffle -m {params.methods} -c {params.closest} -f {input.features} -g {input.genes}  -iter {params.iter} -o {params.folder} -s {params.chrom_sizes} "
+        "ptes.random_shuffle -m {params.methods} -c {params.closest} -f {input.features} -g {input.genes} "
+        " -iter {params.iter} -o {params.folder} -s {params.chrom_sizes} "
 
 
 rule bed_to_overlaps_backwards:
     input:
         input = "bed/panhandles_all_Chimeric.bed" ,        
-        random_dir = directory("backwards/random"),        
+        random_dir = directory("backwards/random"),
+        panhandles = config["panhandles"],
     output:
         expand("backwards/histograms_{method}.png", method=config["methods"]),       
     params: 
@@ -170,6 +175,7 @@ rule bed_to_overlaps_backwards:
     conda:
         config["env"]
     shell:
-        "ptes.bed_to_overlaps -m {params.methods} -i {input.input} -iter {params.iter} -o {params.folder} -a panhandles  -b circles"
+        "ptes.bed_to_overlaps -m {params.methods} -i {input.input} -f {input.panhandles}"
+        "-iter {params.iter} -o {params.folder} -a panhandles  -b circles"
 
 

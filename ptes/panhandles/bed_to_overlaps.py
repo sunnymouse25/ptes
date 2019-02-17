@@ -76,13 +76,15 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", type=str,
-                        help="BED file, bedtools intersect -wo output")
+                        help="BED file, bedtools intersect -a A_FEATURE -b B_BEATURE -s -wo output")
+    parser.add_argument("-f", "--features", type=str,
+                        help="Path to .BED6 file with features (small intervals)")
     parser.add_argument("-o", "--output", type=str,
-                        help="Output folder for results")
+                        help="Output folder with random subfolder for results")
     parser.add_argument("-a", "--afeature", type=str,
-                        help="Name of feature a, i.e. circles")
+                        help="Name of A_FEATURE, i.e. circles")
     parser.add_argument("-b", "--bfeature", type=str,
-                        help="Name of feature b, i.e. panhandles")
+                        help="Name of B_BEATURE, i.e. panhandles")
     parser.add_argument("-iter", "--iterations", type=int,
                         default='1000',
                         help="Number of iterations for randomizing results")
@@ -93,7 +95,6 @@ def main():
 
     args = parser.parse_args()
 
-    make_dir(args.output)
     path_to_file = args.output.rstrip('/')
     random_folder = path_to_file + '/random'
 
@@ -102,111 +103,63 @@ def main():
 
     PTES_logger.info('Reading input file... ')
     PTES_logger.info('Input file: %s ' % args.input)
-    real_dict = parse_bedtools_wo(wo_outfile=args.input)
+    real_dict = parse_bedtools_wo(wo_outfile=args.input)  # category - number of intersections
 
     PTES_logger.info('Reading input file... done')
 
     PTES_logger.info('Running random intersections... ')
-    random_dicts = {}
+    random_dicts = {}   # method - category - list of values
+    categories = ['a_in_b', 'b_in_a', 'overlap']
     for method in args.method:
-        random_dicts[method] = []
+        random_dicts[method] = dict.fromkeys(categories)
+        for k, _ in random_dicts[method].items():
+            random_dicts[method][k] = []   # now we have separate empty lists as values
         for n in range(args.iterations):
-            random_input = '%s_%i.bed' % (method, n)
-            random_output = '%s_%i.bed.intersect' % (method, n)
-            cmd = 'bedtools intersect -a %s -b %s/%s -s -wo > %s/%s' % (args.input,
-                                                                        random_folder,
-                                                                        random_input,
-                                                                        random_folder,
-                                                                        random_output)
+            random_input = '%s/%s_%i.bed' % (random_folder, method, n)
+            random_output = '%s/%s_%i.bed.intersect' % (random_folder, method, n)
+            cmd = 'bedtools intersect -a %s -b %s -s -wo > %s' % (args.features,
+                                                                  random_input,
+                                                                  random_output)
             shell_call(cmd)
-            random_dict = parse_bedtools_wo(wo_outfile=random_folder+'/'+random_output)
-            random_dicts[method].append(random_dict)
+            random_dict = parse_bedtools_wo(wo_outfile=random_output)
+            for cat in categories:
+                random_dicts[method][cat].append(random_dict[cat])
 
     PTES_logger.info('Running random intersections... done')
 
     PTES_logger.info('Creating output files...')
-
-    # taking all keys together
-    key_set = set(real_dict.keys())
-    for method in args.method:
-        for random_dict in random_dicts[method]:
-            for k in random_dict.keys():
-                key_set.add(k)
-
-    # concatenating all random dicts
-    all_random_data = {}
-    for method in args.method:
-        all_random_data[method] = defaultdict(list)
-        for key in key_set:
-            for random_dict in random_dicts[method]:
-                if random_dict.get(key, None):
-                    all_random_data[method][key].append(random_dict[key])
-                else:
-                    all_random_data[method][key].append([0,0,0]) # this feature has no overlaps with the current random file
-
-    # summarizing number of intersections by keys
-    a_in_b_list = {}
-    b_in_a_list = {}
-    overlap_list = {}
-
-    # grouping results by categories, making output for histograms
-    for method in args.method:
-        a_in_b_list[method] = []
-        b_in_a_list[method] = []
-        overlap_list[method] = []
-        for i in range(args.iterations):
-            a_in_b = 0
-            b_in_a = 0
-            overlap = 0
-            for key in key_set:
-                a_in_b += all_random_data[method][key][i][0]
-                b_in_a += all_random_data[method][key][i][1]
-                overlap += all_random_data[method][key][i][2]
-
-            a_in_b_list[method].append(a_in_b)
-            b_in_a_list[method].append(b_in_a)
-            overlap_list[method].append(overlap)
-
-    real_a_in_b = 0
-    real_b_in_a = 0
-    real_overlap = 0
-    for key in real_dict:
-        real_a_in_b += real_dict[key][0]
-        real_b_in_a += real_dict[key][1]
-        real_overlap += real_dict[key][2]
-
     # plotting
     for method in args.method:
         fig = plt.figure(figsize=(8,12))
         plt.suptitle("Shuffling method %s" % method)
         ax1 = fig.add_subplot(321)
-        ax1.hist(a_in_b_list[method])
-        ax1.axvline(real_a_in_b, color='r')
+        ax1.hist(random_dicts[method]['a_in_b'])
+        ax1.axvline(real_dict['a_in_b'], color='r')
         ax1.set(title='%s_in_%s' % (args.afeature, args.bfeature));
 
         ax12 = fig.add_subplot(322)
-        ax12.boxplot(a_in_b_list[method])
-        ax12.plot(1, real_a_in_b, color='r', marker='*', markeredgecolor='k', markersize=15)
+        ax12.boxplot(random_dicts[method]['a_in_b'])
+        ax12.plot(1, real_dict['a_in_b'], color='r', marker='*', markeredgecolor='k', markersize=15)
         ax12.set(title='%s_in_%s' % (args.afeature, args.bfeature));
 
         ax2 = fig.add_subplot(323)
-        ax2.hist(b_in_a_list[method])
-        ax2.axvline(real_b_in_a, color='r')
+        ax2.hist(random_dicts[method]['b_in_a'])
+        ax2.axvline(real_dict['b_in_a'], color='r')
         ax2.set(title='%s_in_%s' % (args.bfeature, args.afeature));
 
         ax22 = fig.add_subplot(324)
-        ax22.boxplot(b_in_a_list[method])
-        ax22.plot(1, real_b_in_a, color='r', marker='*', markeredgecolor='k', markersize=15)
+        ax22.boxplot(random_dicts[method]['b_in_a'])
+        ax22.plot(1, real_dict['b_in_a'], color='r', marker='*', markeredgecolor='k', markersize=15)
         ax22.set(title='%s_in_%s' % (args.bfeature, args.afeature));
 
         ax3 = fig.add_subplot(325)
-        ax3.hist(overlap_list[method])
-        ax3.axvline(real_overlap, color='r')
+        ax3.hist(random_dicts[method]['overlap'])
+        ax3.axvline(real_dict['overlap'], color='r')
         ax3.set(title='overlap');
 
         ax32 = fig.add_subplot(326)
-        ax32.boxplot(overlap_list[method])
-        ax32.plot(1, real_overlap, color='r', marker='*', markeredgecolor='k', markersize=15)
+        ax32.boxplot(random_dicts[method]['overlap'])
+        ax32.plot(1, real_dict['overlap'], color='r', marker='*', markeredgecolor='k', markersize=15)
         ax32.set(title='overlap');
 
         plt.savefig('%s/histograms_%s.png' % (path_to_file, method))
@@ -216,40 +169,17 @@ def main():
         hist_name = '%s/data_hist_%s' % (path_to_file, method)
         with open(hist_name, 'w') as hist_file:
             hist_file.write('%s_in_%s' % (args.afeature, args.bfeature) + '\n')
-            hist_file.write('real: %i' % real_a_in_b + '\n')
-            hist_file.write('random: ' + ','.join(map(str, a_in_b_list[method])) + '\n')
+            hist_file.write('real: %i' % real_dict['a_in_b'] + '\n')
+            hist_file.write('random: ' + ','.join(map(str, random_dicts[method]['a_in_b'])) + '\n')
 
             hist_file.write('%s_in_%s' % (args.bfeature, args.afeature) + '\n')
-            hist_file.write('real: %i' % real_b_in_a + '\n')
-            hist_file.write('random: ' + ','.join(map(str, b_in_a_list[method])) + '\n')
+            hist_file.write('real: %i' % real_dict['b_in_a'] + '\n')
+            hist_file.write('random: ' + ','.join(map(str, random_dicts[method]['b_in_a'])) + '\n')
 
             hist_file.write('overlap' + '\n')
-            hist_file.write('real: %i' % real_overlap + '\n')
-            hist_file.write('random: ' + ','.join(map(str, overlap_list[method])) + '\n')
+            hist_file.write('real: %i' % real_dict['overlap'] + '\n')
+            hist_file.write('random: ' + ','.join(map(str, random_dicts[method]['overlap'])) + '\n')
 
-    '''
-    # for each key: mean number of intersections in every category
-    # really, no one needs this table
-    # if you want it, make sure to debug this code
-    
-    all_random_groups = {}
-    mean_values_output = []
-    for method in args.method: 
-        for key in key_set:
-            all_random_groups[key] = zip(*all_random_data[method])
-            # now we have: key - 3 lists 'a in b', 'b in a', 'overlap'
-            # and real dict: key - 'a in b', 'b in a', 'overlap'
-            # we need to sum by categories
-            # also output for each key: mean number of intersections in every category
-            means = list(np.around(np.mean(all_random_data[method][key], axis=0), decimals=3))
-            out_key = '_'.join(map(str, list(key)))
-            out_line = '\t'.join(map(str, [out_key] + real_dict.get(key, 0) + means))
-            mean_values_output.append(out_line)
-        
-        random_outname = 'categories_random_%s.csv' % method
-        with open('%s/%s' % (path_to_file, random_outname), 'w') as random_outfile:
-            random_outfile.write('\n'.join(mean_values_output))
-    '''
     PTES_logger.info('Creating output files... done')
     PTES_logger.info('Remember to delete random subfolder')
 
