@@ -46,7 +46,7 @@ rule genes_to_bed:
 
 rule circles_in_genes:
     input:
-        circles = "bed/all_Chimeric.single.bed.sorted",
+        circles = config['circles'],
         genes = "bed/hg19_genes_coding_no_overlap.bed",
     output:
         "bed/all_Chimeric_in_genes.bed"    
@@ -128,7 +128,7 @@ rule bed_to_overlaps:
     input:
         input = "bed/all_Chimeric_panhandles.bed",                
         random_dir = directory("random"),
-        circles = "bed/all_Chimeric.single.bed.sorted",
+        circles = config['circles'],
     output:
         expand("histograms_{method}.png", method=config["methods"]),       
     params: 
@@ -138,13 +138,13 @@ rule bed_to_overlaps:
     conda:
         config["env"]
     shell:
-        "ptes.bed_to_overlaps -m {params.methods} -i {input.input} -f {input.circles}"
+        "ptes.bed_to_overlaps -m {params.methods} -i {input.input} -f {input.circles} "
         "-iter {params.iter} -o {params.folder} -a circles -b panhandles "
 
 
 rule random_shuffle_backwards:
     input:
-        features = "bed/all_Chimeric.single.bed.sorted",
+        features = config['circles'],
         genes = "bed/hg19_genes_coding_no_overlap.bed",
     output:
         temp(directory("backwards/random")),
@@ -175,7 +175,7 @@ rule bed_to_overlaps_backwards:
     conda:
         config["env"]
     shell:
-        "ptes.bed_to_overlaps -m {params.methods} -i {input.input} -f {input.panhandles}"
+        "ptes.bed_to_overlaps -m {params.methods} -i {input.input} -f {input.panhandles} "
         "-iter {params.iter} -o {params.folder} -a panhandles  -b circles"
 
 

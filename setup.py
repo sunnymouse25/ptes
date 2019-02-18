@@ -12,6 +12,7 @@ setup(
         'pyinterval>=1.2.0',
         'pyaml',
         'matplotlib>=2.2.2',
+        'seaborn>=0.9.0',
         ],
     entry_points={
             'console_scripts': [

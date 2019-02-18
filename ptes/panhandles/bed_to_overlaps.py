@@ -4,7 +4,6 @@
 # Runs randomizing of B inside B's genes:
 # bedtools intersect -a B_FEATURE -b GENES_NO_INTERSECTION -wo > output
 # Plots histogram for number of random intersections with real value
-# TODO: pretty histograms
 
 # Imports
 from collections import defaultdict
@@ -12,6 +11,7 @@ import argparse
 
 from interval import interval
 import matplotlib.pyplot as plt
+import seaborn as sns
 plt.switch_backend('agg')
 
 from ptes.constants import PTES_logger
@@ -130,37 +130,22 @@ def main():
     PTES_logger.info('Creating output files...')
     # plotting
     for method in args.method:
-        fig = plt.figure(figsize=(8,12))
+        fig = plt.figure(figsize=(12,6))
         plt.suptitle("Shuffling method %s" % method)
-        ax1 = fig.add_subplot(321)
-        ax1.hist(random_dicts[method]['a_in_b'])
+        ax1 = fig.add_subplot(131)
+        sns.distplot(random_dicts[method]['a_in_b'], kde=False)
         ax1.axvline(real_dict['a_in_b'], color='r')
         ax1.set(title='%s_in_%s' % (args.afeature, args.bfeature));
 
-        ax12 = fig.add_subplot(322)
-        ax12.boxplot(random_dicts[method]['a_in_b'])
-        ax12.plot(1, real_dict['a_in_b'], color='r', marker='*', markeredgecolor='k', markersize=15)
-        ax12.set(title='%s_in_%s' % (args.afeature, args.bfeature));
-
-        ax2 = fig.add_subplot(323)
-        ax2.hist(random_dicts[method]['b_in_a'])
+        ax2 = fig.add_subplot(132)
+        sns.distplot(random_dicts[method]['b_in_a'], kde=False)
         ax2.axvline(real_dict['b_in_a'], color='r')
         ax2.set(title='%s_in_%s' % (args.bfeature, args.afeature));
 
-        ax22 = fig.add_subplot(324)
-        ax22.boxplot(random_dicts[method]['b_in_a'])
-        ax22.plot(1, real_dict['b_in_a'], color='r', marker='*', markeredgecolor='k', markersize=15)
-        ax22.set(title='%s_in_%s' % (args.bfeature, args.afeature));
-
-        ax3 = fig.add_subplot(325)
-        ax3.hist(random_dicts[method]['overlap'])
+        ax3 = fig.add_subplot(133)
+        sns.distplot(random_dicts[method]['overlap'], kde=False)
         ax3.axvline(real_dict['overlap'], color='r')
         ax3.set(title='overlap');
-
-        ax32 = fig.add_subplot(326)
-        ax32.boxplot(random_dicts[method]['overlap'])
-        ax32.plot(1, real_dict['overlap'], color='r', marker='*', markeredgecolor='k', markersize=15)
-        ax32.set(title='overlap');
 
         plt.savefig('%s/histograms_%s.png' % (path_to_file, method))
 
