@@ -118,28 +118,37 @@ ax12.set(title='Relative location')
 
 ax2 = fig.add_subplot(323)
 ax2.hist(feature_len_list)
-#ax2.set_xlim(0, 50000)
+ax2.set_xlim(0, 10000)
 ax2.set(title='Features length')
 
 ax22 = fig.add_subplot(324)
 ax22.boxplot(feature_len_list)
-#ax22.set_ylim(0, 500000)
+ax22.set_ylim(0, 200000)
 ax22.set(title='Features length')
 
 ax3 = fig.add_subplot(325)
 ax3.hist(gene_len_list)
-ax3.set_xlim(0, 1000000)
+ax3.set_xlim(0, 500000)
 ax3.set(title='Containers length')
 
 ax32 = fig.add_subplot(326)
 ax32.boxplot(gene_len_list)
-ax3.set_ylim(0, 1000000)
+ax3.set_ylim(0, 500000)
 ax32.set(title='Containers length')
 
 #fig.tight_layout()
 plt.savefig('%s/%s_relative_position.png' % (path_to_file, args.prefix))
 
 PTES_logger.info('Plotting... done')
+PTES_logger.info('Saving output to file... ')
+with open('%s/%s_relative_position.txt' % (path_to_file, args.prefix), 'w') as out_file:
+    out_file.write('Relative positions: \n')
+    out_file.write(','.join(map(str,p_dict.values())) + '\n')
+    out_file.write('Feature lengths: \n')
+    out_file.write(','.join(map(str, feature_len_list)) + '\n')
+    out_file.write('Gene lengths: \n')
+    out_file.write(','.join(map(str, gene_len_list)) + '\n')
+PTES_logger.info('Saving output to file... done')
 
 
 

@@ -35,7 +35,10 @@ def get_read_interval(cigar, leftpos, output='dict'):
     read_list = []    
     features_list = []
     for feature, length in cigar_list:  
-        if 'M' in feature or 'D' in feature or 'N' in feature or 'p' in feature:
+        if 'M' in feature \
+                or 'D' in feature \
+                or 'N' in feature \
+                or 'p' in feature:
             k = interval[leftpos, leftpos + length - 1]
             leftpos = leftpos + length
             read_interval = read_interval | k
@@ -172,13 +175,22 @@ def split_by_p(read_dict):
     return [read_dict]
 
 
-def annot_junctions(gtf_exons_name):
+def annot_junctions(gtf_exons_name, feature_name='exon'):
+    """
+    Reads annotation file in GTF format and takes coordinates of splice sites
+    :param gtf_exons_name: name of GTF file (with exons)
+    :param feature_name: name of feature (3rd field) to obtain coordinates, default 'exon'
+    :return: two sets of integer numbers
+    """
     gtf_donors = defaultdict(set)
     gtf_acceptors = defaultdict(set)
     with open(gtf_exons_name, 'r') as gtf_exons_file:
         for line in gtf_exons_file:
             line_list = line.strip().split()
             chrom = line_list[0]
+            feature = line_list[2]
+            if feature != feature_name:
+                continue
             strt = int(line_list[3])
             end = int(line_list[4])
             chain = line_list[6]
@@ -193,7 +205,7 @@ def annot_junctions(gtf_exons_name):
 
 def dict_to_interval(read_dict, put_n=True, output='interval'):
     """
-
+    Translates output of get_read_interval into interval or list of intervals
     :param read_dict: OrderedDict, output of get_read_interval
     :param put_n: include N to interval, default True
     :param output: interval or list, default interval

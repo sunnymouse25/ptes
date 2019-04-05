@@ -1,15 +1,8 @@
 import os
-import shutil
 import unittest
-from collections import OrderedDict
-
-from interval import interval
 
 import ptes.ptes
-from ptes.constants import PTES_logger
 from research.constants import TEST_DIR
-from research import star_encode
-
 
 PACKAGE_DIR = 'research'
 INPUT_DIR = os.path.join(TEST_DIR, 'test_data', PACKAGE_DIR)

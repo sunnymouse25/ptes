@@ -1,5 +1,5 @@
 # Takes STAR Chimeric.out.junction output,
-# converts into .bed files, with information in .coords.csv
+# converts circles into .bed files, with information in .coords.csv
 # also can sort .bed files and convert them to .bigBed
 # by default does not filter STAR output, there is an option to do it
 
@@ -31,6 +31,7 @@ def main():
                         default='ENCODE',
                         help="Tag name for grouping results (prefix), i.e. ENCODE id")
     args = parser.parse_args()
+
     # Main
     make_dir(args.output)
     path_to_file = args.output.rstrip('/')
@@ -43,15 +44,15 @@ def main():
         prefix=args.tag,
         path_to_file=path_to_file)
 
-    skipped = {'non-filtered': 0,
-               'chrM': 0,
-               'j_type-': 0,
-               'non-chim': 0}
+    skipped = {'non-filtered': 0,    # different chromosomes and/or chains
+               'chrM': 0,      # mapping to chrM
+               'j_type-': 0,   # junction between the mates, -1 in STAR output
+               'non-chim': 0}   # STAR counts very long (>1Mb) junctions as chimeric
 
     bed_list = []  # for outputting BED lines
     coord_list = []   # for outputting coord lines
-    single_list = [] # for outputting BED lines, one row per one chimeric junction
-    single_junc_list = [] # for outputting BED lines, one row per one unique chimeric junction
+    single_list = []  # for outputting BED lines, one row per one chimeric junction
+    single_junc_list = []  # for outputting BED lines, one row per one unique chimeric junction
     junc_dict = {}
 
     if args.filter:
@@ -107,7 +108,7 @@ def main():
                                   read_dict=chim_part2,
                                   name='%s_%s_%s_chim2' % (chrom, junction_name, code),
                                   color='r')
-            if not junc_dict.get(junction_name, None):   # for each unique junction write the 1st representative chim pair
+            if not junc_dict.get(junction_name, None):   # for each unique junction write the 1st chim pair
                 junc_dict[junction_name] = []
                 add_junc = True
             else:
@@ -150,10 +151,10 @@ def main():
             open('%s/%s' % (folder_name, single_bed_name), 'w') as single_bed_file:
         bed_file.write('\n'.join(bed_list))
         coord_file.write('\n'.join(coord_list))
-        for key, value in junc_dict.items():
-            unique_bed_file.write(value[0]+'\n'+value[1]+'\n')
         single_bed_file.write('\n'.join(single_list))
         single_unique_bed_file.write('\n'.join(single_junc_list))
+        for key, value in junc_dict.items():
+            unique_bed_file.write(value[0]+'\n'+value[1]+'\n')
 
     PTES_logger.info('Writing BED files... done')
 

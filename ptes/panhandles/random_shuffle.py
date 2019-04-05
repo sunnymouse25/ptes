@@ -4,6 +4,7 @@
 # 2. shuffle outside: randomly moves small interval inside the other large interval
 # (approx. the same size OR coverage, same chromosome);
 # 3. bedtools shuffle: randomly moves all features in the union of all containers
+# TODO: test function choose_close
 
 # Imports
 from collections import defaultdict
@@ -51,7 +52,7 @@ def choose_close(sorted_list, items='values', threshold=100):
     for i, gene in enumerate(sorted_list):
         if i <= threshold:
             a = 0
-            b = 2*threshold
+            b = 2*threshold+1
         elif threshold < i < (len_list-threshold):
             a = i - threshold
             b = i + threshold + 1
