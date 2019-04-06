@@ -19,6 +19,8 @@ setup(
                 "ptes.random_shuffle = ptes.panhandles.random_shuffle:main",
                 "ptes.bed_to_overlaps = ptes.panhandles.bed_to_overlaps:main",
                 "ptes.star_chim_to_bed = ptes.panhandles.star_chim_to_bed:main",
+                "ptes.star_SE_chimeric = ptes.star.star_SE_chimeric:main",
+                "ptes.junctions_to_bed = ptes.star.junctions_to_bed:main",
 
             ]
       }

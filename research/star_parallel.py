@@ -82,14 +82,14 @@ for i, name in enumerate(file_str.split()):
     cmd_list.append("cat %s/mate2_Chimeric.out.junction | awk '$1 ==$4 && $3 ==$6 && $7 >= 0 && $8+$9<=5 ' | sort |  uniq  > %s/mate2_Chimeric.out.junction.filtered" % (folder_name, folder_name))                   
     cmd_list.append('mkdir %s/mate1' % folder_name)    
     cmd_list.append('mkdir %s/mate2' % folder_name)    
-    cmd_list.append('python star_encode_SE.py \
+    cmd_list.append('python star_SE_chimeric.py \
                     -i %s/mate1_Chimeric.out.junction.filtered\
                     -s %s/mate2_Aligned.out.sam \
                     -o %s/mate1\
                     -g /home/sunnymouse/Human_ref/GRCh37.p13.genome.fa\
                     -gtf /home/sunnymouse/Human_ref/hg19_exons.gtf\
                     -t %s' % (folder_name, folder_name, folder_name, id))    
-    cmd_list.append('python star_encode_SE.py \
+    cmd_list.append('python star_SE_chimeric.py \
                     -i %s/mate2_Chimeric.out.junction.filtered \
                     -s %s/mate1_Aligned.out.sam \
                     -o %s/mate2\

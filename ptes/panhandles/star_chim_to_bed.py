@@ -1,18 +1,35 @@
 # Takes STAR Chimeric.out.junction output,
-# converts circles into .bed files, with information in .coords.csv
-# also can sort .bed files and convert them to .bigBed
-# by default does not filter STAR output, there is an option to do it
+# converts circles into reads and junctions tables, writes intervals for junctions_to_bed into JSON file
 
 # Imports
 
 import argparse
+from collections import defaultdict
+import os
+import json
+
+import pandas as pd
 
 from ptes.constants import PTES_logger
 from ptes.lib.general import shell_call, make_dir, digit_code
-from ptes.ptes import get_read_interval, star_line_dict
-from ptes.ucsc.ucsc import get_track_list, make_bed_folder, to_bigbed, get_single_track
+from ptes.ptes import get_read_interval, star_line_dict, annot_junctions
 
 # Functions
+
+
+def reads_to_junctions(reads_df):
+    index_list = ['chrom', 'chain', 'donor', 'acceptor']
+    chd = reads_df.pivot_table(index=index_list,
+                               values=['chim_dist', 'annot_donor', 'annot_acceptor', 'letters_ss'],
+                               aggfunc='first')
+    c = reads_df.pivot_table(index=index_list,
+                             values=['read_name'],
+                             aggfunc='count')
+    c.columns=['counts']
+    res = pd.concat([chd, c], axis=1)
+    return res.sort_values(index_list)
+
+
 def main():
     ### Arguments
 
@@ -20,13 +37,12 @@ def main():
     parser.add_argument("-i", "--input", type=str,
                         help="STAR Chimeric.out.junction output")
     parser.add_argument("-o", "--output", type=str,
-                        help="Path for ./bed subfolder with results")
+                        help="Path for subfolder with results")
     parser.add_argument("-f", "--filter", type=str,
                         help="Enable filtering for STAR output, creates .filtered file")
-    parser.add_argument("-s", "--sort", type=str,
-                        help="Sort BED files, write anything to enable")
-    parser.add_argument("-bb", "--bigbed", type=str,
-                        help="Create .bigBed file, write anything to enable")
+    parser.add_argument("-gtf", "--gtf_annot", type=str,
+                        default='/home/sunnymouse/Human_ref/hg19_exons.gtf',
+                        help="Absolute path to annotation file")
     parser.add_argument("-t", "--tag", type=str,
                         default='ENCODE',
                         help="Tag name for grouping results (prefix), i.e. ENCODE id")
@@ -34,26 +50,14 @@ def main():
 
     # Main
     make_dir(args.output)
-    path_to_file = args.output.rstrip('/')
-
-    unique_bed_name = '%s.unique.bed' % args.tag  # for unique junctions
-    single_bed_name = '%s.single.bed' % args.tag   # single line for one chimeric junction
-    single_unique_bed_name = '%s.single.unique.bed' % args.tag  # for unique junctions, single line for one junction
-
-    folder_name, bed_name, coord_name = make_bed_folder(
-        prefix=args.tag,
-        path_to_file=path_to_file)
 
     skipped = {'non-filtered': 0,    # different chromosomes and/or chains
                'chrM': 0,      # mapping to chrM
                'j_type-': 0,   # junction between the mates, -1 in STAR output
                'non-chim': 0}   # STAR counts very long (>1Mb) junctions as chimeric
 
-    bed_list = []  # for outputting BED lines
-    coord_list = []   # for outputting coord lines
-    single_list = []  # for outputting BED lines, one row per one chimeric junction
-    single_junc_list = []  # for outputting BED lines, one row per one unique chimeric junction
-    junc_dict = {}
+    junc_dict = defaultdict(list)
+    read_names_list = []
 
     if args.filter:
         PTES_logger.info('Filtering STAR output...')
@@ -63,6 +67,15 @@ def main():
         PTES_logger.info('Filtering STAR output... done')
     else:
         input_name = args.input
+
+    # Exons GTF to junctions dict
+    PTES_logger.info('Reading GTF...')
+    gtf_exons_name = args.gtf_annot
+    gtf_donors, gtf_acceptors = annot_junctions(gtf_exons_name=gtf_exons_name)
+    PTES_logger.info('Reading GTF... done')
+
+    annot_donors = 0
+    annot_acceptors = 0
 
     PTES_logger.info('Input file: %s ' % input_name)
 
@@ -94,84 +107,60 @@ def main():
             read_name = line_dict['read_name']
             chim_part1 = get_read_interval(cigar=line_dict['cigar1'], leftpos=line_dict['coord1'])
             chim_part2 = get_read_interval(cigar=line_dict['cigar2'], leftpos=line_dict['coord2'])
-            junction_name = '%i_%i' % (line_dict['donor_ss'], line_dict['acceptor_ss'])   # name is chim junc coords
-            code = digit_code(number=i)  # every unique number will be 6-digit
-            windows_min = []
-            windows_max = []
-            bed1 = get_track_list(chrom=chrom,
-                                  chain=chain,
-                                  read_dict=chim_part1,
-                                  name='%s_%s_%s_chim1' % (chrom, junction_name, code),
-                                  color='r')
-            bed2 = get_track_list(chrom=chrom,
-                                  chain=chain,
-                                  read_dict=chim_part2,
-                                  name='%s_%s_%s_chim2' % (chrom, junction_name, code),
-                                  color='r')
-            if not junc_dict.get(junction_name, None):   # for each unique junction write the 1st chim pair
-                junc_dict[junction_name] = []
-                add_junc = True
-            else:
-                add_junc = False
-            for track_list in [bed1, bed2]:
-                windows_min.append(int(track_list[1]))  # track_list[1] is chromStart, track_list[2] is chromEnd
-                windows_max.append(int(track_list[2]))
-                bed_line = '\t'.join(track_list)
-                bed_list.append(bed_line)
-                if add_junc:
-                    junc_dict[junction_name].append(bed_line)
+            junc_dict[(chrom, chain, line_dict['donor_ss'], line_dict['acceptor_ss'])]. append((chim_part1, chim_part2))
 
-            window = (chrom,
-                      min(windows_min) - 200,
-                      max(windows_max) + 200)
-            coord_list.append('%s:%i-%i\t' % window + '\t'.join([junction_name, code]))
-            # Making BED files with single row for pair of mates
-            single_track = get_single_track(read_dict_list=[chim_part1, chim_part2],
-                                            kwargs={
-                                            'chrom': chrom,
-                                            'chain': chain,
-                                            'name': '%s_%s_%s' % (chrom, junction_name, code),
-                                            'color': '255,0,255'}  # for checking in GB that intervals are same
-                                            )
-            single_list.append('\t'.join(single_track))
-            if add_junc:
-                single_junc_list.append('\t'.join(single_track))
+            annot_donor = 0
+            annot_acceptor = 0
+            if line_dict['donor_ss'] in gtf_donors[chrom]:
+                annot_donor = 1
+                annot_donors += 1
+            if line_dict['acceptor_ss'] in gtf_acceptors[chrom]:
+                annot_acceptor = 1
+                annot_acceptors += 1
+
+            read_attrs = {
+                'read_name': read_name,
+                'chain': chain,  # chain of chimeric junction
+                'chrom': chrom,
+                'donor': line_dict['donor_ss'],
+                'acceptor': line_dict['acceptor_ss'],
+                'annot_donor': annot_donor,
+                'annot_acceptor': annot_acceptor,
+                'letters_ss': line_dict['junction_letters'],
+                'chim_dist': abs(line_dict['donor_ss'] - line_dict['acceptor_ss']),
+            }
+            read_names_list.append(read_attrs)
 
     PTES_logger.info('Reading STAR output... done')
     PTES_logger.info('Processed: %i rows' % i)
     for key in skipped:
         PTES_logger.info('Skipped %s: %i rows' % (key, skipped[key]))
-    PTES_logger.info('Converted successfully: %i rows' % len(coord_list))
+    PTES_logger.info('Converted successfully: %i rows' % len(read_names_list))
+    PTES_logger.info('Annot donors: %i' % annot_donors)
+    PTES_logger.info('Annot acceptors: %i' % annot_acceptors)
+    PTES_logger.info('Creating reads dataframe...')
+    try:
+        reads_df = pd.DataFrame(read_names_list)
+        reads_df['id'] = args.tag
+        # Writing reads dataframe
 
-    PTES_logger.info('Writing BED files...')
-    with open('%s/%s' % (folder_name, bed_name), 'w') as bed_file, \
-            open('%s/%s' % (folder_name, coord_name), 'w') as coord_file, \
-            open('%s/%s' % (folder_name, unique_bed_name), 'w') as unique_bed_file,\
-            open('%s/%s' % (folder_name, single_unique_bed_name), 'w') as single_unique_bed_file,\
-            open('%s/%s' % (folder_name, single_bed_name), 'w') as single_bed_file:
-        bed_file.write('\n'.join(bed_list))
-        coord_file.write('\n'.join(coord_list))
-        single_bed_file.write('\n'.join(single_list))
-        single_unique_bed_file.write('\n'.join(single_junc_list))
-        for key, value in junc_dict.items():
-            unique_bed_file.write(value[0]+'\n'+value[1]+'\n')
+        reads_df.to_csv(os.path.join(args.output, 'chim_reads.csv'), sep='\t')
+        PTES_logger.info('Creating reads dataframe... done')
 
-    PTES_logger.info('Writing BED files... done')
+        # Writing junc_dict
+        PTES_logger.info('Writing intervals to json...')
+        with open(os.path.join(args.output, 'junc_dict.json'), 'w') as junc_json:
+            json.dump({str(k): v for k, v in junc_dict.items()}, junc_json, indent=2)
+        PTES_logger.info('Writing intervals to json... done')
 
-    if args.sort:
-        PTES_logger.info('Sorting BED files...')
-        for filename in [bed_name, unique_bed_name, single_bed_name, single_unique_bed_name]:
-            shell_call('cat %s/%s | sort -k1,1 -k2,2n  > %s/%s.sorted' % (folder_name,
-                                                                          filename,
-                                                                          folder_name,
-                                                                          filename))
+        # Writing junctions dataframe
+        PTES_logger.info('Creating junctions dataframe...')
+        junctions_df = reads_to_junctions(reads_df=reads_df)
+        junctions_df.to_csv(os.path.join(args.output, 'chim_junctions.csv'), sep='\t')
+        PTES_logger.info('Creating junctions dataframe... done')
+    except KeyError:
+        PTES_logger.warning('Creating reads dataframe... empty dataframe')
 
-        PTES_logger.info('Sorting BED files... done')
-
-        if args.bigbed:   # sorting before is necessary
-            PTES_logger.info('Making bigBed...')
-            to_bigbed(bed_name=bed_name, folder_name=folder_name)
-            PTES_logger.info('Making bigBed... done')
 
 if __name__ == "__main__":
     main()

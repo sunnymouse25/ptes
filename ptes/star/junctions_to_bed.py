@@ -10,6 +10,7 @@ import os
 import json
 
 import pandas as pd
+from interval import interval
 
 from ptes.constants import PTES_logger
 from ptes.lib.general import shell_call, make_dir, digit_code
@@ -21,14 +22,14 @@ from ptes.ucsc.ucsc import get_track_list, to_bigbed, get_single_track
 
 def main():
     # Arguments
-
+    args_s = '-t ../tests/test_data/ptes/junctions.csv -j ../tests/test_data/ptes/junc_dict.json -q chrom=="chr2"'
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--table", type=str,
                         help="Table with junctions, first 4 columns are: chrom, strand, donor, acceptor")
     parser.add_argument("-j", "--json", type=str,
                         help="JSON file with all read intervals as OrderedDicts")
     parser.add_argument("-q", "--query", type=str,
-                        default='letters_ss=="GT/AG" & chim_dist < 10000 & mate_dist < 10000',
+                        default='letters_ss=="GT/AG" & chim_dist < 10000',
                         help="Conditions to filter junctions table, string as in pandas.query()")
     parser.add_argument("-n", "--names", type=str,
                         nargs='+',
@@ -51,6 +52,7 @@ def main():
     parser.add_argument("-bb", "--bigbed", type=str,
                         help="Write anything to enable creating .bigBed files")
     args = parser.parse_args()
+#    args = parser.parse_args(args_s.split(' '))
 
     PTES_logger.info('Creating BED files...')
 
@@ -121,7 +123,7 @@ def main():
         windows_min = []
         windows_max = []
         codes = []
-        description_list = list(key) + value.values   # for description lines: code and coord
+        description_list = list(key) + list(value.values)   # for description lines: code and coord
         for read_dicts in junc_dict[str(key)]:  # list of unique reads w. this junction
             num += 1
             code = digit_code(number=num)  # every unique number will be 6-digit
@@ -133,6 +135,8 @@ def main():
             else:
                 add_unique = False
             for i, read_dict in enumerate(read_dicts):
+                for k,v in read_dict.items():
+                    read_dict[k] = interval[v[0][0], v[0][1]]
                 track_list = get_track_list(chrom=chrom,
                                       chain=chain,
                                       read_dict=read_dict,

@@ -152,8 +152,10 @@ def chim_input(chim_name, gtf_donors, gtf_acceptors, sam_dict, junc_dict):
     PTES_logger.info('Processed: %i rows' % i)
     for key in skipped:
         PTES_logger.info('Skipped %s: %i rows' % (key, skipped[key]))
+    PTES_logger.info('Converted successfully: %i rows' % len(read_names_list))
     PTES_logger.info('Annot donors: %i' % annot_donors)
     PTES_logger.info('Annot acceptors: %i' % annot_acceptors)
+
     return read_names_list
 
 
@@ -253,10 +255,13 @@ def reads_to_junctions(reads_df):
     xxa = reads_df.pivot_table(index=index_list,
                               values=['annot_acceptor'],
                               aggfunc='first')
+    chd = reads_df.pivot_table(index=index_list,
+                              values=['chim_dist'],
+                              aggfunc='first')
     yy = reads_df.pivot_table(index=index_list,
                               values=['id'],
                               aggfunc=lambda id: len(id.unique()))
-    res = pd.concat([zz, xxd, xxa, yy], axis=1)
+    res = pd.concat([zz, xxd, xxa, chd, yy], axis=1)
     mi = res.columns
     ind = pd.Index([e[0] + '_'+ e[1] if e[0] == 'counts' else e for e in mi.tolist()])
     res.columns = ind
@@ -281,14 +286,10 @@ def main():
                         help="Enables list input mode. Options: input, sam, tag - MUST be lists")
     parser.add_argument("-gtf", "--gtf_annot", type=str,
                         default='/home/sunnymouse/Human_ref/hg19_exons.gtf',
-                        help="Absolute path to genome file")
+                        help="Absolute path to annotation file")
     parser.add_argument("-t", "--tag", type=str,
                         default='ENCODE',
                         help="Tag name for grouping results, i.e. ENCODE id OR list of tags")
-    parser.add_argument("-sort", "--sort", type=str,
-                        help="Sort BED files")
-    parser.add_argument("-bb", "--bigbed", type=str,
-                        help="Create .bigBed file")
     args = parser.parse_args()
 
     # Exons GTF to junctions dict
@@ -299,7 +300,6 @@ def main():
 
     # non-iterative
     make_dir(args.output)
-    path_to_file = args.output.rstrip('/')
     junc_dict = defaultdict(list)
 
     if args.list:
