@@ -40,7 +40,8 @@ def main():
                         nargs='+',
                         default=['r', 'r', 'b', ],
                         help="List of colors for chim parts in BED name: [chim1, chim2, mate2]. \
-                        Important: same order as parts in json values")
+                        Important: same order as parts in json values\
+                        Colors: 'r', 'g', 'b' or in RGB code like '0,255,0'")
     parser.add_argument("-o", "--output", type=str,
                         default='bed',
                         help="Output folder for results, default is bed/")
