@@ -62,7 +62,7 @@ def main():
     args = parser.parse_args()
 #    args = parser.parse_args(args_s.split(' '))
 
-    PTES_logger.info('Creating BED files...')
+    PTES_logger.info('Reading input files...')
     make_dir(args.output)
 
     index_list = ['chrom', 'chain', 'donor', 'acceptor']
@@ -78,7 +78,8 @@ def main():
             if col not in filter_df.columns:
                 PTES_logger.error('Filter table does not contain required column %s ' % col)
                 os._exit(1)
-        df_new = pd.merge(filter_df, input_df, on=index_list, how='inner',)
+        cols_to_use = index_list + list(input_df.columns.difference(filter_df.columns))  # avoid repeating columns
+        df_new = pd.merge(filter_df, input_df[cols_to_use], on=index_list, how='inner',)
     else:
         df_new = input_df
 
@@ -108,6 +109,8 @@ def main():
     else:
         part_colors = args.colors
 
+    PTES_logger.info('Reading input files... done')
+    PTES_logger.info('Creating BED files...')
     bed_name = '%s.bed' % args.prefix  # only track lines
     unique_bed_name = '%s.unique.bed' % args.prefix  # one representative read for unique junctions
     single_bed_name = '%s.single.bed' % args.prefix  # single line for one chimeric junction
@@ -143,14 +146,15 @@ def main():
 
     num = 0
     for key, value in df_new.iterrows():  # unique chimeric junctions
-        chrom = key[0]  # key is (chrom, chain, donor_ss, acceptor_ss)
-        chain = key[1]
-        donor_ss = key[2]
-        acceptor_ss = key[3]
+        chrom = value['chrom']  # key is (chrom, chain, donor_ss, acceptor_ss)
+        chain = value['chain']
+        donor_ss = value['donor']
+        acceptor_ss = value['acceptor']
         windows_min = []
         windows_max = []
         codes = []
         description_list = list(value.values)   # for description lines: code and coord
+        key = (chrom, chain, donor_ss, acceptor_ss)
         for read_entry in junc_dict[str(key)]:  # list of dicts: unique reads w. this junction
             for read_name, read_dicts in read_entry.items():
                 num += 1
@@ -212,7 +216,7 @@ def main():
         single_unique_bed_file.write('\n'.join(single_unique_list))
 
         for unique_value in unique_dict.values():
-            unique_bed_file.write('\n'.join(list(unique_value)))
+            unique_bed_file.write('\n'.join(list(unique_value))+'\n')
 
         description_header_list = list(value.index)  # for description headers: code and coord
         coord_file.write('\t'.join(

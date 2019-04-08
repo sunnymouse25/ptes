@@ -266,19 +266,13 @@ def reads_to_junctions(reads_df):
             zz['counts']['inside'] = 0
     zz = zz.sort_values([('counts', 'outside'), ('counts','inside')], ascending=False)
 
-    xxd = reads_df.pivot_table(index=index_list,
-                              values=['annot_donor'],
-                              aggfunc='first')
-    xxa = reads_df.pivot_table(index=index_list,
-                              values=['annot_acceptor'],
-                              aggfunc='first')
-    chd = reads_df.pivot_table(index=index_list,
-                              values=['chim_dist'],
+    xx = reads_df.pivot_table(index=index_list,
+                              values=['chim_dist', 'annot_donor', 'annot_acceptor', 'letters_ss'],
                               aggfunc='first')
     yy = reads_df.pivot_table(index=index_list,
                               values=['id'],
                               aggfunc=lambda id: len(id.unique()))
-    res = pd.concat([zz, xxd, xxa, chd, yy], axis=1)
+    res = pd.concat([zz, xx, yy], axis=1)
     mi = res.columns
     ind = pd.Index([e[0] + '_'+ e[1] if e[0] == 'counts' else e for e in mi.tolist()])
     res.columns = ind
@@ -358,6 +352,11 @@ def main():
                 })
         try:
             norm_read_names = pd.DataFrame(norm_read_names_list)
+            norm_read_names = norm_read_names[
+                ['read_name', 'chrom', 'chain',
+                 'donor', 'acceptor', 'annot_donor',
+                 'annot_acceptor','n_reads',]
+            ].sort_values(by=['chrom', 'chain', 'donor', 'acceptor']).reset_index(drop=True)
         except KeyError:
             PTES_logger.warning('Creating norm split reads dataframe... empty dataframe')
 
@@ -374,6 +373,14 @@ def main():
         PTES_logger.info('Creating reads dataframes...')
         try:
             reads_df = pd.DataFrame(read_names_list)
+            reads_df = reads_df[
+                ['read_name', 'chrom', 'chain',
+                 'donor', 'acceptor', 'annot_donor',
+                 'annot_acceptor', 'letters_ss',
+                 'chim_dist', 'mate_dist',
+                 'type',
+                 ]
+            ].sort_values(by=['chrom', 'chain', 'donor', 'acceptor']).reset_index(drop=True) # reorder columns
             reads_df['id'] = tag
             if args.list:
                 chim_reads_df_list.append(reads_df)

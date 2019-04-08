@@ -146,6 +146,12 @@ def main():
     PTES_logger.info('Creating reads dataframe...')
     try:
         reads_df = pd.DataFrame(read_names_list)
+        reads_df = reads_df[
+            ['read_name', 'chrom', 'chain',
+             'donor', 'acceptor', 'annot_donor',
+             'annot_acceptor', 'letters_ss',
+             'chim_dist']
+        ].sort_values(by=['chrom', 'chain', 'donor', 'acceptor']).reset_index(drop=True)  # reorder columns
         reads_df['id'] = args.tag
         # Writing reads dataframe
 
