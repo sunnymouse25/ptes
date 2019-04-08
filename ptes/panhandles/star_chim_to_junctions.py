@@ -7,6 +7,7 @@ import argparse
 from collections import defaultdict
 import os
 import json
+import gzip
 
 import pandas as pd
 
@@ -38,6 +39,8 @@ def main():
                         help="STAR Chimeric.out.junction output")
     parser.add_argument("-o", "--output", type=str,
                         help="Path for subfolder with results")
+    parser.add_argument("-gz", "--gzip", type=str,
+                        help="Option to create .json.gz")
     parser.add_argument("-f", "--filter", type=str,
                         help="Enable filtering for STAR output, creates .filtered file")
     parser.add_argument("-gtf", "--gtf_annot", type=str,
@@ -107,7 +110,9 @@ def main():
             read_name = line_dict['read_name']
             chim_part1 = get_read_interval(cigar=line_dict['cigar1'], leftpos=line_dict['coord1'])
             chim_part2 = get_read_interval(cigar=line_dict['cigar2'], leftpos=line_dict['coord2'])
-            junc_dict[(chrom, chain, line_dict['donor_ss'], line_dict['acceptor_ss'])]. append((chim_part1, chim_part2))
+            junc_dict[(chrom, chain, line_dict['donor_ss'], line_dict['acceptor_ss'])
+            ].append({read_name:
+                                      (chim_part1, chim_part2)})
 
             annot_donor = 0
             annot_acceptor = 0
@@ -149,8 +154,13 @@ def main():
 
         # Writing junc_dict
         PTES_logger.info('Writing intervals to json...')
-        with open(os.path.join(args.output, 'junc_dict.json'), 'w') as junc_json:
-            json.dump({str(k): v for k, v in junc_dict.items()}, junc_json, indent=2)
+        if args.gzip:
+            PTES_logger.info('Output will be archived')
+            with gzip.GzipFile(os.path.join(args.output, 'junc_dict.json.gz'), 'w') as junc_json:
+                junc_json.write(json.dumps({str(k): v for k, v in junc_dict.items()}).encode('utf-8'))
+        else:
+            with open(os.path.join(args.output, 'junc_dict.json'), 'w') as junc_json:
+                json.dump({str(k): v for k, v in junc_dict.items()}, junc_json, indent=2)
         PTES_logger.info('Writing intervals to json... done')
 
         # Writing junctions dataframe

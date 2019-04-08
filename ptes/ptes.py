@@ -244,7 +244,6 @@ def mate_intersection(interval1, interval2):
             return 'outside'
 
 
-
 def return_mates(cigar1, coord1, cigar2, coord2, chain):
     mate1 = None
     mate2 = None
@@ -366,7 +365,7 @@ def get_junctions(chrom, chain, values, gtf_donors, gtf_acceptors):
 def star_line_dict(line):
     """
     For reading STAR Chimeric.out.junction file
-    :param line: line of file
+    :param line: single line of file
     :return: dictionary of attrs, type int or str
     """
     line_list = line.strip().split('\t')

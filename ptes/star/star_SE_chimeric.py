@@ -7,11 +7,12 @@ from collections import defaultdict
 import argparse
 import os
 import json
+import gzip
 
 import pandas as pd
 
 from ptes.constants import PTES_logger
-from ptes.lib.general import init_file, shell_call, make_dir
+from ptes.lib.general import make_dir
 from ptes.ptes import annot_junctions, \
     mate_intersection, get_read_interval, dict_to_interval, one_interval, \
     star_line_dict
@@ -19,19 +20,20 @@ from ptes.ptes import annot_junctions, \
 # Functions
 
 
-def sam_input(sam_name, chim_name):
+def sam_input(sam_name, chim_name, norm_dict):
     """
     Reads STAR non-chimeric output
     To make it faster, skips lines with names that are absent in chimeric output
     :param sam_name: STAR output Aligned.out.sam
     :param chim_name: STAR output Chimeric.out.junction.filtered
-    :return: defaultdict sam_dict: key is read_name, value is list of dicts with SAM attrs 
+    :param norm_dict: defaultdict: key is (chrom,chain,donor,acceptor), value is dict: read_name: read_intervals
+    :return: defaultdict sam_dict: key is read_name, value is list of dicts with SAM attrs
     """
     with open(chim_name, 'r') as chim_file:
         names_list = [x.strip('\n').split('\t')[9] for x in chim_file.readlines()]
         names_set = set(names_list)  # only names with chimeric output
 
-    sam_dict = defaultdict(list)
+    sam_dict = defaultdict(list)   # for searching for non-chimeric mates
     with open(sam_name, 'r') as input_file:
         for line in input_file:
             row = line.strip().split('\t')
@@ -40,6 +42,21 @@ def sam_input(sam_name, chim_name):
                 sam_attrs = parse_sam_row(row)
                 if sam_attrs:
                     sam_dict[read_name].append(sam_attrs)
+                    if 'N' in sam_attrs['cigar']:   # read mapped with intron
+                        read_dict = get_read_interval(cigar=sam_attrs['cigar'],
+                                                       leftpos = sam_attrs['leftpos'],
+                                                       output='dict')
+                        if sam_attrs['chain'] == '+':
+                            donor_ss = int(read_dict['N1'][0].inf - 1)   # counts first N as intron
+                            acceptor_ss = int(read_dict['N1'][0].sup + 1)
+                        elif sam_attrs['chain'] == '-':
+                            donor_ss = int(read_dict['N1'][0].sup + 1)
+                            acceptor_ss = int(read_dict['N1'][0].inf - 1)
+                        norm_dict[(sam_attrs['chrom'],
+                                   sam_attrs['chain'],
+                                   donor_ss,
+                                   acceptor_ss)][read_name].append(read_dict)
+
     return sam_dict
 
 
@@ -128,7 +145,7 @@ def chim_input(chim_name, gtf_donors, gtf_acceptors, sam_dict, junc_dict):
                            chain,
                            line_dict['donor_ss'],
                            line_dict['acceptor_ss'],
-                           )].append(mate_tuple[:3])   # read_intervals only
+                           )].append({read_name: mate_tuple[:3]})   # read_intervals only
                 interval_intersection = mate_tuple[3]
                 if interval_intersection == 'outside':
                     mate_dist = count_mate_outside_dist(mate_tuple=mate_tuple,
@@ -282,6 +299,8 @@ def main():
                         help="Filtered STAR SAM output, with read_names same as in Chimeric.out.junction OR list")
     parser.add_argument("-o", "--output", type=str,
                         help="Output folder for results")
+    parser.add_argument("-gz", "--gzip", type=str,
+                        help="Option to create .json.gz")
     parser.add_argument("-l", "--list", type=str,
                         help="Enables list input mode. Options: input, sam, tag - MUST be lists")
     parser.add_argument("-gtf", "--gtf_annot", type=str,
@@ -301,6 +320,7 @@ def main():
     # non-iterative
     make_dir(args.output)
     junc_dict = defaultdict(list)
+    norm_junc_dict = defaultdict(lambda: defaultdict(list))
 
     if args.list:
         with open(args.input, 'r') as chim_names_file:
@@ -320,7 +340,25 @@ def main():
 
         # Reading filtered STAR non-chim output
         PTES_logger.info('Reading STAR non-chimeric output...')
-        sam_dict = sam_input(sam_name=sam_name, chim_name=chim_name)
+        sam_dict = sam_input(sam_name=sam_name,
+                            chim_name=chim_name,
+                            norm_dict=norm_junc_dict)
+        norm_read_names_list = []
+        for k, v in norm_junc_dict.items():
+            for read_name, read_dicts in v.items():
+                norm_read_names_list.append({
+                    'read_name' : read_name,
+                    'chrom': k[0],
+                    'chain': k[1],
+                    'donor': k[2],
+                    'acceptor': k[3],
+                    'n_reads': len(read_dicts),
+                })
+        try:
+            norm_read_names = pd.DataFrame(norm_read_names_list)
+        except KeyError:
+            PTES_logger.warning('Creating norm split reads dataframe... empty dataframe')
+
         PTES_logger.info('Reading STAR non-chimeric output... done')
 
         # Reading filtered STAR output
@@ -331,7 +369,7 @@ def main():
                                      sam_dict=sam_dict,
                                      junc_dict=junc_dict)
         PTES_logger.info('Reading STAR chimeric output... done')
-        PTES_logger.info('Creating reads dataframe...')
+        PTES_logger.info('Creating reads dataframes...')
         try:
             reads_df = pd.DataFrame(read_names_list)
             reads_df['id'] = tag
@@ -343,24 +381,36 @@ def main():
             PTES_logger.warning('Creating reads dataframe... empty dataframe')
 
     if args.list:
-        all_reads_df = pd.concat(chim_reads_df_list).reset_index(drop=True)
+        all_reads_df = pd.concat(chim_reads_df_list, sort=True).reset_index(drop=True)
 
     # Writing reads dataframe
 
     all_reads_df.to_csv(os.path.join(args.output, 'chim_reads.csv'), sep='\t')
-    PTES_logger.info('Creating reads dataframe... done')
+    norm_read_names.to_csv(os.path.join(args.output, 'norm_split_reads.csv'), sep='\t')
+    PTES_logger.info('Creating reads dataframes... done')
 
     # Writing junc_dict
-    PTES_logger.info('Writing intervals to json...')
-    with open(os.path.join(args.output, 'junc_dict.json'), 'w') as junc_json:
-        json.dump({str(k): v for k, v in junc_dict.items()}, junc_json, indent=2)
-    PTES_logger.info('Writing intervals to json... done')
+    PTES_logger.info('Writing intervals to json files...')
+    if args.gzip:
+        PTES_logger.info('Output will be archived')
+        with gzip.GzipFile(os.path.join(args.output, 'junc_dict.json.gz'), 'w') as junc_json, \
+                gzip.GzipFile(os.path.join(args.output, 'norm_dict.json.gz'), 'w') as norm_json:
+            junc_json.write(json.dumps({str(k): v for k, v in junc_dict.items()}).encode('utf-8'))
+            norm_json.write(json.dumps(norm_junc_dict).encode('utf-8'))
+    else:
+        with open(os.path.join(args.output, 'junc_dict.json'), 'w') as junc_json, \
+                open(os.path.join(args.output, 'junc_dict.json'), 'w') as norm_json:
+            json.dump({str(k): v for k, v in junc_dict.items()}, junc_json, indent=2)
+            json.dump({str(k): v for k, v in norm_junc_dict.items()}, norm_json, indent=2)
+
+    PTES_logger.info('Writing intervals to json files... done')
 
     # Writing junctions dataframe
     PTES_logger.info('Creating junctions dataframe...')
     junctions_df = reads_to_junctions(reads_df=all_reads_df)
-    junctions_df.to_csv(os.path.join(args.output,'chim_junctions.csv'), sep='\t')
+    junctions_df.to_csv(os.path.join(args.output, 'chim_junctions.csv'), sep='\t')
     PTES_logger.info('Creating junctions dataframe... done')
+
 
 if __name__ == "__main__":
     main()

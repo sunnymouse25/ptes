@@ -47,7 +47,7 @@ class TestStar(unittest.TestCase):
     def test_sam_input(self, dump=False):
         res_dict = star_SE_chimeric.sam_input(sam_name=os.path.join(INPUT_DIR, 'Aligned.out.sam.shuf'),
                                               chim_name=os.path.join(INPUT_DIR, 'Chimeric.out.junction.shuf'),
-                                              )
+                                              norm_dict=defaultdict(lambda: defaultdict(list)))
         if dump:
             with open(os.path.join(OUTPUT_DIR, 'sam_dict.json'), 'w') as sam_json_file:
                 json.dump(res_dict, sam_json_file, indent=2)

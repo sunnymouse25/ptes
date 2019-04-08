@@ -21,7 +21,7 @@ setup(
                 "ptes.star_chim_to_junctions = ptes.panhandles.star_chim_to_junctions:main",
                 "ptes.star_SE_chimeric = ptes.star.star_SE_chimeric:main",
                 "ptes.junctions_to_bed = ptes.star.junctions_to_bed:main",
-
+                "grep_list = ptes.lib.general.grep_list:main",
             ]
       }
     )

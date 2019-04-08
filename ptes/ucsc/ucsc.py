@@ -75,6 +75,7 @@ def get_track_list(chrom, chain, read_dict, score=0, name='sim_read', color='r')
 
 def make_bed_folder(prefix, path_to_file):
     """
+    DEPRECATED
     Initiates 3 files essential for Genome Browser:
     :param path_to_file: folder where ./bed subfolder will be
     :param prefix: prefix for names of files, i.e. sample tag
@@ -112,27 +113,24 @@ def make_bed_folder(prefix, path_to_file):
     return folder_name, bed_name, coord_name
 
 
-def to_bigbed(bed_name, folder_name, gen_num='hg19'):
+def to_bigbed(bed_name, folder_name, genome_version='hg19'):
     """
-    Runs bedToBigBed script to convert bed to bigBed,
+    Runs UCSC bedToBigBed script to convert bed to bigBed,
     bedToBigBed must be in $PATH
     :param bed_name: Name of BED file to be converted
     :param folder_name: Folder of BED file
-    :param gen_num: Name of genome version, hg19 by default
+    :param genome_version: Name of genome version, hg19 by default
     :return: sorted bed and bigBed files in the same folder
     """
-    if folder_name[-1] != '/':
-        folder_name = folder_name + '/'
-    real_path = os.path.dirname(os.path.realpath(folder_name+bed_name))
-    cmd1 = 'sort -k1,1 -k2,2n %s/%s > %s/%s.sorted' % (real_path, bed_name, real_path, bed_name)
+    cmd1 = 'sort -k1,1 -k2,2n %s > %s.sorted' % (os.path.join(folder_name, bed_name),
+                                                 os.path.join(folder_name, bed_name))
     cmd2 = 'bedToBigBed \
-            %s/%s.sorted \
+            %s.sorted \
             http://hgdownload.soe.ucsc.edu/goldenPath/%s/bigZips/%s.chrom.sizes \
-            %s/%s' % (real_path, bed_name,
-                      gen_num, gen_num,
-                      real_path, bed_name.rpartition('.')[0]+'.bb')
-    cmds = [cmd1,cmd2]
-    for cmd in cmds:
+            %s' % (os.path.join(folder_name, bed_name),
+                   genome_version, genome_version,
+                   os.path.join(folder_name, bed_name.replace('.bed', '.bb')))
+    for cmd in [cmd1,cmd2]:
         shell_call(cmd)
 
 
