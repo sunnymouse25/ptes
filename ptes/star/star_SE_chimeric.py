@@ -396,7 +396,7 @@ def main():
         with gzip.GzipFile(os.path.join(args.output, 'junc_dict.json.gz'), 'w') as junc_json, \
                 gzip.GzipFile(os.path.join(args.output, 'norm_dict.json.gz'), 'w') as norm_json:
             junc_json.write(json.dumps({str(k): v for k, v in junc_dict.items()}).encode('utf-8'))
-            norm_json.write(json.dumps(norm_junc_dict).encode('utf-8'))
+            norm_json.write(json.dumps({str(k): v for k, v in norm_junc_dict.items()}).encode('utf-8'))
     else:
         with open(os.path.join(args.output, 'junc_dict.json'), 'w') as junc_json, \
                 open(os.path.join(args.output, 'junc_dict.json'), 'w') as norm_json:
