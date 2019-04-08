@@ -35,7 +35,6 @@ def main():
     parser.add_argument("-gz", "--gzip", type=str,
                         help="Write anything to enable reading .json.gz")
     parser.add_argument("-q", "--query", type=str,
-                        default='letters_ss=="GT/AG" & chim_dist < 10000',
                         help="Conditions to filter junctions table, string as in pandas.DataFrame.query()")
     parser.add_argument("-f", "--filter", type=str,
                         help="DataFrame with (chrom, strand, donor, acceptor) to filter input table")
@@ -67,19 +66,21 @@ def main():
     make_dir(args.output)
 
     index_list = ['chrom', 'chain', 'donor', 'acceptor']
-    input_df = pd.read_csv(args.table, sep=args.sep)
+    input_df = pd.read_csv(args.table, sep=args.separator)
     for col in index_list:
         if col not in input_df.columns:
             PTES_logger.error('Input table does not contain required column %s ' % col)
             os._exit(1)
 
     if args.filter:   # filter by junctions
-        filter_df = pd.read_csv(args.filter, sep=args.sep)
+        filter_df = pd.read_csv(args.filter, sep=args.separator)
         for col in index_list:
             if col not in filter_df.columns:
                 PTES_logger.error('Filter table does not contain required column %s ' % col)
                 os._exit(1)
         df_new = pd.merge(filter_df, input_df, on=index_list, how='inner',)
+    else:
+        df_new = input_df
 
     if args.query:   # filter reads by conditions
         df_new = df_new.query(args.query)

@@ -352,7 +352,9 @@ def main():
                     'chain': k[1],
                     'donor': k[2],
                     'acceptor': k[3],
-                    'n_reads': len(read_dicts),
+                    'annot_donor': 1 if k[2] in gtf_donors[k[0]] else 0,
+                    'annot_acceptor': 1 if k[3] in gtf_acceptors[k[0]] else 0,
+                    'n_reads': len(v.items()),
                 })
         try:
             norm_read_names = pd.DataFrame(norm_read_names_list)
@@ -384,10 +386,10 @@ def main():
         all_reads_df = pd.concat(chim_reads_df_list, sort=True).reset_index(drop=True)
 
     # Writing reads dataframe
-
+    PTES_logger.info('Writing reads dataframes...')
     all_reads_df.to_csv(os.path.join(args.output, 'chim_reads.csv'), sep='\t')
     norm_read_names.to_csv(os.path.join(args.output, 'norm_split_reads.csv'), sep='\t')
-    PTES_logger.info('Creating reads dataframes... done')
+    PTES_logger.info('Writing reads dataframes... done')
 
     # Writing junc_dict
     PTES_logger.info('Writing intervals to json files...')
@@ -396,12 +398,12 @@ def main():
         with gzip.GzipFile(os.path.join(args.output, 'junc_dict.json.gz'), 'w') as junc_json, \
                 gzip.GzipFile(os.path.join(args.output, 'norm_dict.json.gz'), 'w') as norm_json:
             junc_json.write(json.dumps({str(k): v for k, v in junc_dict.items()}).encode('utf-8'))
-            norm_json.write(json.dumps({str(k): v for k, v in norm_junc_dict.items()}).encode('utf-8'))
+            norm_json.write(json.dumps({str(k1): v1 for k1, v1 in norm_junc_dict.items()}).encode('utf-8'))
     else:
         with open(os.path.join(args.output, 'junc_dict.json'), 'w') as junc_json, \
-                open(os.path.join(args.output, 'junc_dict.json'), 'w') as norm_json:
+                open(os.path.join(args.output, 'norm_dict.json'), 'w') as norm_json:
             json.dump({str(k): v for k, v in junc_dict.items()}, junc_json, indent=2)
-            json.dump({str(k): v for k, v in norm_junc_dict.items()}, norm_json, indent=2)
+            json.dump({str(k1): v1 for k1, v1 in norm_junc_dict.items()}, norm_json, indent=2)
 
     PTES_logger.info('Writing intervals to json files... done')
 
