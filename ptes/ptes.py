@@ -493,3 +493,26 @@ def get_b_start(row, logger=PTES_logger):
     logger.error('Feature B start not found, skipping row...')
     logger.warning('Have you passed the right file as input?')
     return None
+
+
+def parse_sam_row(row):
+    """
+    Takes line of SAM file and makes a dict of attributes
+    :param row: list (single row splitted by TAB) of STAR output Aligned.out.sam
+    :return: dict if not chrM else None
+    """
+    flag = int(row[1])
+    if flag & 16 == 0:
+        chain = '+'
+    else:
+        chain = '-'
+    if row[2] == 'chrM':
+        return None
+    sam_attrs = {
+        'chain': chain,
+        'chrom': row[2],
+        'leftpos': row[3],
+        'cigar': row[5],
+        'NH': int(row[11].lstrip('NH:i:')),
+    }
+    return sam_attrs

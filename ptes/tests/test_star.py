@@ -42,12 +42,12 @@ class TestStar(unittest.TestCase):
         with open(os.path.join(INPUT_DIR,'Aligned.out.sam.shuf')) as sam_file:
             for line in sam_file:
                 row = line.strip().split('\t')
-                res_dict = star_SE_chimeric.parse_sam_row(row=row)
+                if len(row) > 1:
+                    res_dict = ptes.parse_sam_row(row=row)
 
     def test_sam_input(self, dump=False):
         res_dict = star_SE_chimeric.sam_input(sam_name=os.path.join(INPUT_DIR, 'Aligned.out.sam.shuf'),
-                                              chim_name=os.path.join(INPUT_DIR, 'Chimeric.out.junction.shuf'),
-                                              norm_dict=defaultdict(lambda: defaultdict(list)))
+                                              chim_name=os.path.join(INPUT_DIR, 'Chimeric.out.junction.shuf'))
         if dump:
             with open(os.path.join(OUTPUT_DIR, 'sam_dict.json'), 'w') as sam_json_file:
                 json.dump(res_dict, sam_json_file, indent=2)
@@ -117,11 +117,12 @@ class TestStar(unittest.TestCase):
             json.dump({str(k): v for k, v in junc_dict_test.items()}, junc_json, indent=2)
 
         data = json.load(open(os.path.join(OUTPUT_DIR, 'junc_dict.json')), object_pairs_hook=OrderedDict)
-        '''
+
         with open(os.path.join(OUTPUT_DIR, 'junc_dict_loaded.json'), 'w') as junc_json:
             json.dump(data, junc_json, indent=2)
-        '''
-        print data
+        
+
+
 
 
 

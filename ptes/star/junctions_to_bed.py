@@ -145,28 +145,35 @@ def main():
         )
 
     num = 0
-    for key, value in df_new.iterrows():  # unique chimeric junctions
-        chrom = value['chrom']  # key is (chrom, chain, donor_ss, acceptor_ss)
-        chain = value['chain']
-        donor_ss = value['donor']
-        acceptor_ss = value['acceptor']
+    junctions = df_new.groupby(index_list)['read_name'].apply(list) # unique chimeric junctions
+    for index, read_list in junctions.items():  # value is list of read_names
+        print index
+        print read_list
+        chrom = index[0]  # key is (chrom, chain, donor_ss, acceptor_ss)
+        chain = index[1]
+        donor_ss = index[2]
+        acceptor_ss = index[3]
         windows_min = []
         windows_max = []
         codes = []
-        description_list = list(value.values)   # for description lines: code and coord
-        key = (chrom, chain, donor_ss, acceptor_ss)
-        for read_entry in junc_dict[str(key)]:  # list of dicts: unique reads w. this junction
-            for read_name, read_dicts in read_entry.items():
+        for read_name in read_list:  # unique reads w. this junction
+            print read_name
+            print junc_dict[str(index)]
+            print type(junc_dict[str(index)])
+            print junc_dict[str(index)][0]
+            for read_dicts in junc_dict[str(index)][0][read_name]:  # list of dicts: each dict is one track (i.e. chim_part)
+                print read_dicts
                 num += 1
                 code = digit_code(number=num)  # every unique number will be 6-digit
                 codes.append(code)
                 track_lists = []
-                if not unique_dict.get(key, None):   # for each unique junction write the 1st read line(s)
-                    unique_dict[key] = []
+                if not unique_dict.get(index, None):   # for each unique junction write the 1st read line(s)
+                    unique_dict[index] = []
                     add_unique = True
                 else:
                     add_unique = False
                 for i, read_dict in enumerate(read_dicts):
+                    print i, read_dict
                     for k,v in read_dict.items():
                         read_dict[k] = interval[v[0][0], v[0][1]]
                     track_list = get_track_list(chrom=chrom,
@@ -181,7 +188,7 @@ def main():
                     bed_line = '\t'.join(track_list)
                     bed_list.append(bed_line)
                     if add_unique:
-                        unique_dict[key].append(bed_line)
+                        unique_dict[index].append(bed_line)
                 # Making BED file with one row for the pair of mates
                 single_track = get_single_track(read_dicts,
                                                 {'chrom': chrom,
@@ -193,14 +200,27 @@ def main():
                     single_unique_list.append('\t'.join(single_track))
 
                 # Writing code line
-                code_line = '\t'.join(map(str, description_list + [code]))
-                code_list.append(code_line)
+                code_list.append({
+                    'chrom': chrom,
+                    'chain': chain,
+                    'donor': donor_ss,
+                    'acceptor': acceptor_ss,
+                    'read_name': read_name,
+                    'code': code
+                })
         # Description for the junction into coords.csv
         window = (chrom,  # one window for junction
                   min(windows_min) - 200,
                   max(windows_max) + 200)
-        description = '\t'.join(map(str, description_list + ['-'.join([codes[0], codes[-1]])]))
-        coord_list.append('%s:%i-%i\t' % window + description)
+
+        coord_list.append({
+                    'chrom': chrom,
+                    'chain': chain,
+                    'donor': donor_ss,
+                    'acceptor': acceptor_ss,
+                    'window': '%s:%i-%i' % window,
+                    'codes': ['-'.join([codes[0], codes[-1]])],
+        })
 
     PTES_logger.info('Creating BED files... done')
 
@@ -218,16 +238,15 @@ def main():
         for unique_value in unique_dict.values():
             unique_bed_file.write('\n'.join(list(unique_value))+'\n')
 
-        description_header_list = list(value.index)  # for description headers: code and coord
-        coord_file.write('\t'.join(
-            description_header_list + ['codes']) + '\n')
-        coord_file.write('\n'.join(coord_list))
-
-        code_file.write('\t'.join(
-            description_header_list +['code']) + '\n')
-        code_file.write('\n'.join(code_list))
-
     PTES_logger.info('Writing BED files... done')
+
+    PTES_logger.info('Creating junctions dataframes...')
+    coord_df = pd.DataFrame(coord_list)
+    code_df = pd.DataFrame(code_list)
+    coord_df.to_csv(os.path.join(args.output, coord_name), sep='\t')
+    code_df.to_csv(os.path.join(args.output, code_name), sep='\t')
+
+    PTES_logger.info('Creating junctions dataframes... done')
 
     if args.sort:
         PTES_logger.info('Sorting BED files...')
