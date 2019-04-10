@@ -23,7 +23,15 @@ from ptes.ucsc.ucsc import get_track_list, to_bigbed, get_single_track
 
 def main():
     # Arguments
-    args_s = '-t ../tests/test_data/ptes/junctions.csv -j ../tests/test_data/ptes/junc_dict.json -q chrom=="chr2"'
+    '''
+    args_s = ('-t ../tests/test_data/ptes/chim_reads_test.csv '
+    '-j ../tests/test_data/ptes/junc_dict.json.gz '
+    '-f ../tests/test_data/ptes/chim_junctions_test.csv '
+    '-q letters_ss=="." '
+    '-o ../tests/test_results/bed '
+    '-p test '
+    '-gz 1')
+    '''
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--table", type=str,
                         help="DataFrame with data to create BED, required 4 columns are: chrom, strand, donor, acceptor")
@@ -67,6 +75,7 @@ def main():
 
     index_list = ['chrom', 'chain', 'donor', 'acceptor']
     input_df = pd.read_csv(args.table, sep=args.separator)
+
     for col in index_list:
         if col not in input_df.columns:
             PTES_logger.error('Input table does not contain required column %s ' % col)
@@ -86,9 +95,6 @@ def main():
     if args.query:   # filter reads by conditions
         df_new = df_new.query(args.query)
 
-    # After this step we will output everything in df_new
-    # Anyway, keeping read_names in json is a good idea
-
     # Reading .json.gz file
     if args.gzip:
         with gzip.GzipFile(args.json, 'r') as fin:
@@ -96,7 +102,7 @@ def main():
     else:
         junc_dict = json.load(open(args.json), object_pairs_hook=OrderedDict)
 
-    len_read_dicts = len(junc_dict.values()[0][0].values())   # must be 3 for mate_inside/outside and 2 for circles
+    len_read_dicts = len(junc_dict.values()[0].values())   # must be 3 for mate_inside/outside and 2 for circles
     if len(args.names) < len_read_dicts:
         PTES_logger.warning('List of names has less items than list of features in read_dicts!')
         part_names = [x[0]+str(x[1]) for x in list(zip(['part_']*len_read_dicts, range(1, len_read_dicts+1)))]
@@ -147,79 +153,72 @@ def main():
     num = 0
     junctions = df_new.groupby(index_list)['read_name'].apply(list) # unique chimeric junctions
     for index, read_list in junctions.items():  # value is list of read_names
-        print index
-        print read_list
-        chrom = index[0]  # key is (chrom, chain, donor_ss, acceptor_ss)
+        chrom = index[0]  # index is (chrom, chain, donor_ss, acceptor_ss)
         chain = index[1]
         donor_ss = index[2]
         acceptor_ss = index[3]
         windows_min = []
         windows_max = []
         codes = []
-        for read_name in read_list:  # unique reads w. this junction
-            print read_name
-            print junc_dict[str(index)]
-            print type(junc_dict[str(index)])
-            print junc_dict[str(index)][0]
-            for read_dicts in junc_dict[str(index)][0][read_name]:  # list of dicts: each dict is one track (i.e. chim_part)
-                print read_dicts
-                num += 1
-                code = digit_code(number=num)  # every unique number will be 6-digit
-                codes.append(code)
-                track_lists = []
-                if not unique_dict.get(index, None):   # for each unique junction write the 1st read line(s)
-                    unique_dict[index] = []
-                    add_unique = True
-                else:
-                    add_unique = False
-                for i, read_dict in enumerate(read_dicts):
-                    print i, read_dict
-                    for k,v in read_dict.items():
-                        read_dict[k] = interval[v[0][0], v[0][1]]
-                    track_list = get_track_list(chrom=chrom,
-                                              chain=chain,
-                                              read_dict=read_dict,
-                                              name='_'.join(map(str,[donor_ss, acceptor_ss, code, part_names[i]])),
-                                              color=part_colors[i])
-                    track_lists.append(track_list)
-                for track_list in track_lists:
-                    windows_min.append(int(track_list[1]))  # track_list[1] is chromStart, track_list[2] is chromEnd
-                    windows_max.append(int(track_list[2]))
-                    bed_line = '\t'.join(track_list)
-                    bed_list.append(bed_line)
-                    if add_unique:
-                        unique_dict[index].append(bed_line)
-                # Making BED file with one row for the pair of mates
-                single_track = get_single_track(read_dicts,
-                                                {'chrom': chrom,
-                                                 'chain': chain,
-                                                 'name': '_'.join(map(str,[donor_ss, acceptor_ss, code])),
-                                                 'color': '255,0,255'})  # for checking in GB that intervals are same
-                single_list.append('\t'.join(single_track))
+        for read_name in read_list:  # for each read w. this junction
+            num += 1
+            code = digit_code(number=num)  # every unique number will be 6-digit
+            codes.append(code)
+            track_lists = []
+            if not unique_dict.get(index, None):  # for each unique junction write the 1st read line(s)
+                unique_dict[index] = []
+                add_unique = True
+            else:
+                add_unique = False
+            read_dict_list = junc_dict[str(index)][read_name]  # list of dicts: each dict is one track (i.e. chim_part)
+            # Iterating over tracks
+            for i, read_dict in enumerate(read_dict_list):
+                for k, v in read_dict.items():
+                    read_dict[k] = interval[v[0][0], v[0][1]]
+                track_list = get_track_list(chrom=chrom,
+                                            chain=chain,
+                                            read_dict=read_dict,
+                                            name='_'.join(map(str, [donor_ss, acceptor_ss, code, part_names[i]])),
+                                            color=part_colors[i])
+                track_lists.append(track_list)
+            # Writing BED lines, collecting extremas for window size
+            for track_list in track_lists:
+                windows_min.append(int(track_list[1]))  # track_list[1] is chromStart, track_list[2] is chromEnd
+                windows_max.append(int(track_list[2]))
+                bed_line = '\t'.join(track_list)
+                bed_list.append(bed_line)
                 if add_unique:
-                    single_unique_list.append('\t'.join(single_track))
-
-                # Writing code line
-                code_list.append({
-                    'chrom': chrom,
-                    'chain': chain,
-                    'donor': donor_ss,
-                    'acceptor': acceptor_ss,
-                    'read_name': read_name,
-                    'code': code
-                })
+                    unique_dict[index].append(bed_line)
+            # Writing code line
+            code_list.append({
+                'chrom': chrom,
+                'chain': chain,
+                'donor': donor_ss,
+                'acceptor': acceptor_ss,
+                'read_name': read_name,
+                'code': code
+            })
+            # Making BED file with one row for the pair of mates
+            single_track = get_single_track(read_dict_list=read_dict_list,
+                                            kwargs={'chrom': chrom,
+                                                    'chain': chain,
+                                                    'name': '_'.join(
+                                                        map(str, [donor_ss, acceptor_ss, code])),
+                                                    'color': '255,0,255'})  # for checking in GB that intervals are same
+            single_list.append('\t'.join(single_track))
+            if add_unique:
+                single_unique_list.append('\t'.join(single_track))
         # Description for the junction into coords.csv
         window = (chrom,  # one window for junction
                   min(windows_min) - 200,
                   max(windows_max) + 200)
-
         coord_list.append({
                     'chrom': chrom,
                     'chain': chain,
                     'donor': donor_ss,
                     'acceptor': acceptor_ss,
                     'window': '%s:%i-%i' % window,
-                    'codes': ['-'.join([codes[0], codes[-1]])],
+                    'codes': '-'.join(map(str,[codes[0], codes[-1]])),
         })
 
     PTES_logger.info('Creating BED files... done')

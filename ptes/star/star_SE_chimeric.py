@@ -274,8 +274,7 @@ def main():
 
     # non-iterative
     make_dir(args.output)
-    junc_dict = defaultdict(list)
-    norm_junc_dict = defaultdict(list)
+    junc_dict = defaultdict(dict)
 
     if args.list:
         with open(args.input, 'r') as chim_names_file:

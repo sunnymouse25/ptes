@@ -2,10 +2,6 @@ import os
 import shutil
 import unittest
 import json
-from collections import defaultdict, OrderedDict
-
-import pandas as pd
-import numpy as np
 
 from ptes.star import junctions_to_bed
 from ptes.constants import TEST_DIR, PTES_logger
