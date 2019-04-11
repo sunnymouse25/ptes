@@ -12,7 +12,7 @@ import gzip
 import pandas as pd
 
 from ptes.constants import PTES_logger
-from ptes.lib.general import shell_call, make_dir, digit_code
+from ptes.lib.general import shell_call, make_dir
 from ptes.ptes import get_read_interval, star_line_dict, annot_junctions
 
 # Functions
@@ -59,7 +59,7 @@ def main():
                'j_type-': 0,   # junction between the mates, -1 in STAR output
                'non-chim': 0}   # STAR counts very long (>1Mb) junctions as chimeric
 
-    junc_dict = defaultdict(list)
+    junc_dict = defaultdict(dict)
     read_names_list = []
 
     if args.filter:
@@ -111,7 +111,7 @@ def main():
             chim_part1 = get_read_interval(cigar=line_dict['cigar1'], leftpos=line_dict['coord1'])
             chim_part2 = get_read_interval(cigar=line_dict['cigar2'], leftpos=line_dict['coord2'])
             junc_dict[(chrom, chain, line_dict['donor_ss'], line_dict['acceptor_ss'])
-            ].append({read_name:
+            ].update({read_name:
                                       (chim_part1, chim_part2)})
 
             annot_donor = 0

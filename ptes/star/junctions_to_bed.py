@@ -95,6 +95,8 @@ def main():
     if args.query:   # filter reads by conditions
         df_new = df_new.query(args.query)
 
+    df_new.to_csv(os.path.join(args.output, 'df_filter.csv'), sep='\t')
+
     # Reading .json.gz file
     if args.gzip:
         with gzip.GzipFile(args.json, 'r') as fin:
