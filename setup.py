@@ -19,7 +19,7 @@ setup(
                 "ptes.random_shuffle = ptes.panhandles.random_shuffle:main",
                 "ptes.bed_to_overlaps = ptes.panhandles.bed_to_overlaps:main",
                 "ptes.star_chim_to_junctions = ptes.panhandles.star_chim_to_junctions:main",
-                "ptes.star_sam_to_junctions = ptes.panhandles.star_sam_to_junctions:main",
+                "ptes.star_sam_to_junctions = ptes.star.star_sam_to_junctions:main",
                 "ptes.star_SE_chimeric = ptes.star.star_SE_chimeric:main",
                 "ptes.junctions_to_bed = ptes.star.junctions_to_bed:main",
                 "grep_list = ptes.lib.general.grep_list:main",

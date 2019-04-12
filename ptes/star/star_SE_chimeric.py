@@ -275,6 +275,7 @@ def main():
     # non-iterative
     make_dir(args.output)
     junc_dict = defaultdict(dict)
+    all_reads_df = None
 
     if args.list:
         with open(args.input, 'r') as chim_names_file:
@@ -328,28 +329,29 @@ def main():
     if args.list:
         all_reads_df = pd.concat(chim_reads_df_list, sort=True).reset_index(drop=True)
 
-    # Writing reads dataframe
-    PTES_logger.info('Writing reads dataframe...')
-    all_reads_df.to_csv(os.path.join(args.output, 'chim_reads.csv'), sep='\t')
-    PTES_logger.info('Writing reads dataframe... done')
+    if all_reads_df is not None:
+        # Writing reads dataframe
+        PTES_logger.info('Writing reads dataframe...')
+        all_reads_df.to_csv(os.path.join(args.output, 'chim_reads.csv'), sep='\t')
+        PTES_logger.info('Writing reads dataframe... done')
 
-    # Writing junc_dict
-    PTES_logger.info('Writing intervals to json file...')
-    if args.gzip:
-        PTES_logger.info('Output will be archived')
-        with gzip.GzipFile(os.path.join(args.output, 'junc_dict.json.gz'), 'w') as junc_json:
-            junc_json.write(json.dumps({str(k): v for k, v in junc_dict.items()}).encode('utf-8'))
-    else:
-        with open(os.path.join(args.output, 'junc_dict.json'), 'w') as junc_json:
-            json.dump({str(k): v for k, v in junc_dict.items()}, junc_json, indent=2)
+        # Writing junc_dict
+        PTES_logger.info('Writing intervals to json file...')
+        if args.gzip:
+            PTES_logger.info('Output will be archived')
+            with gzip.GzipFile(os.path.join(args.output, 'junc_dict.json.gz'), 'w') as junc_json:
+                junc_json.write(json.dumps({str(k): v for k, v in junc_dict.items()}).encode('utf-8'))
+        else:
+            with open(os.path.join(args.output, 'junc_dict.json'), 'w') as junc_json:
+                json.dump({str(k): v for k, v in junc_dict.items()}, junc_json, indent=2)
 
-    PTES_logger.info('Writing intervals to json file... done')
+        PTES_logger.info('Writing intervals to json file... done')
 
-    # Writing junctions dataframe
-    PTES_logger.info('Creating junctions dataframe...')
-    junctions_df = reads_to_junctions(reads_df=all_reads_df)
-    junctions_df.to_csv(os.path.join(args.output, 'chim_junctions.csv'), sep='\t')
-    PTES_logger.info('Creating junctions dataframe... done')
+        # Writing junctions dataframe
+        PTES_logger.info('Creating junctions dataframe...')
+        junctions_df = reads_to_junctions(reads_df=all_reads_df)
+        junctions_df.to_csv(os.path.join(args.output, 'chim_junctions.csv'), sep='\t')
+        PTES_logger.info('Creating junctions dataframe... done')
 
 
 if __name__ == "__main__":
