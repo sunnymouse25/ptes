@@ -1,0 +1,157 @@
+{
+  "SINATRA_0006:3:9:11600:14728#0": [
+    {
+      "leftpos": "278916", 
+      "NH": 1, 
+      "cigar": "16S60M", 
+      "chrom": "chr20", 
+      "chain": "+"
+    }, 
+    {
+      "leftpos": "278975", 
+      "NH": 1, 
+      "cigar": "76M", 
+      "chrom": "chr20", 
+      "chain": "-"
+    }
+  ], 
+  "SINATRA_0006:1:60:8166:1946#0": [
+    {
+      "leftpos": "21827663", 
+      "NH": 1, 
+      "cigar": "2S54M20S", 
+      "chrom": "chr8", 
+      "chain": "-"
+    }, 
+    {
+      "leftpos": "21824495", 
+      "NH": 1, 
+      "cigar": "20M2479N56M", 
+      "chrom": "chr8", 
+      "chain": "+"
+    }
+  ], 
+  "SINATRA_0006:3:37:19114:12159#0": [
+    {
+      "leftpos": "176869514", 
+      "NH": 1, 
+      "cigar": "3S60M13S", 
+      "chrom": "chr5", 
+      "chain": "-"
+    }, 
+    {
+      "leftpos": "176869385", 
+      "NH": 1, 
+      "cigar": "76M", 
+      "chrom": "chr5", 
+      "chain": "+"
+    }
+  ], 
+  "SINATRA_0006:1:114:15020:14001#0": [
+    {
+      "leftpos": "88786923", 
+      "NH": 1, 
+      "cigar": "22S18M83N36M", 
+      "chrom": "chr16", 
+      "chain": "+"
+    }, 
+    {
+      "leftpos": "88787076", 
+      "NH": 1, 
+      "cigar": "76M", 
+      "chrom": "chr16", 
+      "chain": "-"
+    }
+  ], 
+  "SINATRA_0006:2:25:4694:18144#0": [
+    {
+      "leftpos": "171850223", 
+      "NH": 1, 
+      "cigar": "12S64M", 
+      "chrom": "chr2", 
+      "chain": "+"
+    }, 
+    {
+      "leftpos": "171850309", 
+      "NH": 1, 
+      "cigar": "76M", 
+      "chrom": "chr2", 
+      "chain": "-"
+    }
+  ], 
+  "SINATRA_0006:1:79:10421:16264#0": [
+    {
+      "leftpos": "99158231", 
+      "NH": 1, 
+      "cigar": "76M", 
+      "chrom": "chr7", 
+      "chain": "+"
+    }
+  ], 
+  "SINATRA_0006:2:12:12379:3767#0": [
+    {
+      "leftpos": "5473781", 
+      "NH": 1, 
+      "cigar": "52M24S", 
+      "chrom": "chr11", 
+      "chain": "+"
+    }, 
+    {
+      "leftpos": "5473884", 
+      "NH": 1, 
+      "cigar": "76M", 
+      "chrom": "chr11", 
+      "chain": "-"
+    }
+  ], 
+  "SINATRA_0006:3:9:15131:20821#0": [
+    {
+      "leftpos": "69468026", 
+      "NH": 1, 
+      "cigar": "22S54M", 
+      "chrom": "chr11", 
+      "chain": "+"
+    }, 
+    {
+      "leftpos": "69468095", 
+      "NH": 1, 
+      "cigar": "76M", 
+      "chrom": "chr11", 
+      "chain": "-"
+    }
+  ], 
+  "SINATRA_0006:3:54:4225:3764#0": [
+    {
+      "leftpos": "54908635", 
+      "NH": 1, 
+      "cigar": "76M", 
+      "chrom": "chr17", 
+      "chain": "-"
+    }
+  ], 
+  "SINATRA_0006:3:9:12517:2963#0": [
+    {
+      "leftpos": "26405949", 
+      "NH": 1, 
+      "cigar": "18M1135N58M", 
+      "chrom": "chr2", 
+      "chain": "-"
+    }
+  ], 
+  "SINATRA_0006:3:9:11130:6639#0": [
+    {
+      "leftpos": "3982027", 
+      "NH": 1, 
+      "cigar": "24M193N33M19S", 
+      "chrom": "chr19", 
+      "chain": "-"
+    }, 
+    {
+      "leftpos": "3981446", 
+      "NH": 1, 
+      "cigar": "5M494N71M", 
+      "chrom": "chr19", 
+      "chain": "+"
+    }
+  ]
+}

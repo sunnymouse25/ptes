@@ -1,0 +1,36 @@
+# Folder with STAR Chimeric output in subfolders
+
+star_out_folder:
+    "/home/sunnymouse/projects/PTES/ENCODE"
+
+# Aggregates and filters STAR output:
+filtered_circles:
+    "/home/sunnymouse/projects/PTES/ENCODE/all_Chimeric.out.junction.filtered"
+
+#ENCODE ids for polyA+ and polyA-, also used as folder names with STAR output
+samples:
+    plus: ["ENCFF064IOO","ENCFF074BOV","ENCFF126QEZ","ENCFF131JRU","ENCFF148RNW","ENCFF280XOG","ENCFF321CCY","ENCFF486POD","ENCFF636QII","ENCFF670LIE","ENCFF887ZOX","ENCFF890WWJ",]
+    minus: ["ENCFF040ZWV","ENCFF045NDR","ENCFF054FHQ","ENCFF394YNR","ENCFF409KXZ","ENCFF445OEZ","ENCFF600VKV","ENCFF655YFM","ENCFF703WLE","ENCFF720AGD","ENCFF849DPK","ENCFF995FQE",]
+
+
+# genome annotation from GENCODE
+annot:
+    "/home/sunnymouse/Human_ref/gencode.v19.annotation.gtf"
+
+panhandles: 
+    "/home/sunnymouse/projects/PTES/panhandles/old_panhandles.bed6"
+#    new: "/home/sunnymouse/projects/PTES/panhandles/new_panhandles.bed6"
+
+iterations: 1000
+
+# how to shuffle
+methods: ['inside', 'outside', 'bedtools', ]
+
+# find close genes by length or by coverage
+closest: 'coverage'
+
+chrom_sizes: '/home/sunnymouse/Human_ref/hg19.chrom.sizes'
+
+tag: 'all_Chimeric'
+
+env: "/home/sunnymouse/projects/PTES/python2.bio.yaml"
