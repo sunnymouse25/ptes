@@ -152,7 +152,6 @@ def return_mate_tuple(line_dict, second_mates, chrom, chain):
     chim_part2 = get_read_interval(cigar=line_dict['cigar2'],
                                    leftpos=line_dict['coord2'],
                                    )
-    mate1 = one_interval(dict_to_interval(chim_part1) | dict_to_interval(chim_part2))
     for mate in second_mates:
         if mate['cigar'] == line_dict['cigar1'] \
                 or mate['cigar'] == line_dict['cigar2']:
@@ -166,8 +165,9 @@ def return_mate_tuple(line_dict, second_mates, chrom, chain):
                 continue
         if mate['chrom'] == chrom and mate['chain'] != chain:
             mate2_dict = get_read_interval(cigar=mate['cigar'], leftpos=mate['leftpos'])
-            mate2 = one_interval(dict_to_interval(mate2_dict))
-            interval_intersection = mate_intersection(mate1, mate2)
+            interval_intersection = mate_intersection(chim_part1=chim_part1,
+                                                      chim_part2=chim_part2,
+                                                      read_dict2=mate2_dict)
             return chim_part1, chim_part2, mate2_dict, interval_intersection
     return None
 

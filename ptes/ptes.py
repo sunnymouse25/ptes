@@ -226,7 +226,7 @@ def dict_to_interval(read_dict, put_n=True, output='interval'):
         return [x for x in output_interval.components]
 
 
-def mate_intersection(interval1, interval2):
+def mate_intersection_old(interval1, interval2):
     """
     Defines mate_inside and mate_outside
     :param interval1: chimeric mate
@@ -242,6 +242,37 @@ def mate_intersection(interval1, interval2):
             return 'inside'
         else:
             return 'outside'
+
+
+def mate_intersection(chim_part1, chim_part2, read_dict2, threshold=10):
+    """
+    Defines mate_inside and mate_outside
+    :param chim_part1: chimeric mate, donor
+    :param chim_part2: chimeric mate, acceptor
+    :param read_dict2: normal mate
+    :param threshold: protruding length
+    :return: 'inside' or 'outside'
+    """
+    interval1 = one_interval(dict_to_interval(chim_part1) | dict_to_interval(chim_part2))
+    if len(read_dict2) > 1:   # mate2 is mapped with intron
+        main_mate2_interval = interval()
+        for feature, genome_interval in read_dict2.items():
+            if 'M' in feature:
+                feature_len = get_interval_length(genome_interval)
+                if feature_len >= 5:
+                    main_mate2_interval = main_mate2_interval | genome_interval  # get rid of small M's
+        interval2 = one_interval(main_mate2_interval)
+    else:
+        interval2 = read_dict2['M1']
+    intersection = interval1 & interval2
+    if intersection == interval():  # zero union => do not intersect
+        return 'outside'
+    else:
+        if interval2[0].inf <= interval1[0].inf - threshold or \
+                interval2[-1].sup >= interval1[-1].sup + threshold:   # normal mate is inside chimeric
+            return 'outside'
+        else:
+            return 'inside'
 
 
 def return_mates(cigar1, coord1, cigar2, coord2, chain):
