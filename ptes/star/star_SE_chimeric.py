@@ -294,10 +294,10 @@ def main():
         PTES_logger.info('Input file %s' % chim_name)
 
         # Reading filtered STAR non-chim output
-        PTES_logger.info('Reading STAR non-chimeric output...')
+        PTES_logger.info('Reading STAR .sam output...')
         sam_dict = sam_input(sam_name=sam_name,
                             chim_name=chim_name)
-        PTES_logger.info('Reading STAR non-chimeric output... done')
+        PTES_logger.info('Reading STAR .sam output... done')
 
         # Reading filtered STAR output
         PTES_logger.info('Reading STAR chimeric output...')

@@ -259,7 +259,7 @@ def mate_intersection(chim_part1, chim_part2, read_dict2, threshold=10):
         for feature, genome_interval in read_dict2.items():
             if 'M' in feature:
                 feature_len = get_interval_length(genome_interval)
-                if feature_len >= 5:
+                if feature_len >= threshold:
                     main_mate2_interval = main_mate2_interval | genome_interval  # get rid of small M's
         interval2 = one_interval(main_mate2_interval)
     else:
