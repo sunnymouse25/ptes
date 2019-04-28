@@ -1,0 +1,268 @@
+configfile: "general_config.yaml"
+
+rule all:
+    input:
+        "{folder}/bed/bed/circles.single.bed".format(folder=config["circles_folder"]),
+
+'''
+rule all:
+    input:
+        expand("{folder}/histograms_{method}.png", method=config["methods"], folder=config["circles_folder"]),
+        expand("{folder}/backwards/histograms_{method}.png", method=config["methods"], folder=config["circles_folder"]),
+
+rule STAR_SE_chimeric:
+    input:
+        list_chimeric,   # TODO
+        list_sam,
+        list_tag,
+    output:
+        "{params.folder}/chim_junctions.csv",
+        "{params.folder}/chim_reads.csv",
+        "{params.folder}/junc_dict.json.gz",
+    params:
+        folder = config["chimeric_folder"],
+        annot = config["annot"],
+    shell:
+        "ptes.star_SE_chimeric "
+        "-l 1 "
+        "-i {input.list_chimeric} "
+        "-s {input.list_sam} "
+        "-t {input.list_tag} "
+        "-o {params.folder} "
+        "-gz 1 "
+        "-gtf {params.annot}"
+
+'''
+rule list_circles:
+    input:
+        mate1 = expand("{folder}/{sample}/mate1_Chimeric.out.junction.filtered",
+            folder=config["project_folder"],
+            sample=config["samples"]["plus"]),
+        mate2 = expand("{folder}/{sample}/mate2_Chimeric.out.junction.filtered",
+            folder=config["project_folder"],
+            sample=config["samples"]["plus"]),
+    output:
+        circles="circles_list",
+        tags="circles_tag",
+    run:
+        with open(output.circles, "w") as out:
+            out.write('\n'.join(mate1))
+            out.write()
+            out.write('\n'.join(mate2))
+            out.write()
+        with open(output.tags, "w") as out2:
+            out2.write('\n'.join(config["samples"]["plus"]))
+            out2.write()
+
+
+rule star_to_circles:
+    input:
+        circles="circles_list",
+        tags="circles_tag",
+    output:
+        "{params.circ_folder}/chim_junctions.csv",
+        "{params.circ_folder}/chim_reads.csv",
+        "{params.circ_folder}/junc_dict.json.gz",
+    conda:
+        config["env"],
+    params:
+        circ_folder = config["circles_folder"],
+        annot = config["annot"],
+    shell:
+        "ptes.star_chim_to_junctions "
+        "-i {input.circles} "
+        "-o {params.circ_folder} "
+        "-gz 1 "
+        "-l 1 "
+        "-gtf {params.annot} "
+        "-t {input.tags} "
+
+
+rule circles_to_bed:
+    input:
+        reads="{params.circ_folder}/chim_reads.csv",
+        json="{params.circ_folder}/junc_dict.json.gz",
+    output:
+        "{params.circ_folder}/bed/circles.bed",
+        "{params.circ_folder}/bed/circles.single.bed",
+        "{params.circ_folder}/bed/circles.unique.bed",
+        "{params.circ_folder}/bed/circles.single.unique.bed",
+    params:
+        circ_folder = config["circles_folder"],
+        subfolder = 'bed',
+        letters_ss = '"GT/AG"',
+    conda:
+        config["env"],
+    shell:
+        """python ptes.junctions_to_bed """
+        """-t {input.reads} """
+        """-j {input.json} """
+        """-gz 1 """
+        """-q 'letters_ss == {params.letters_ss} & chim_dist < 100000' """
+        """-o {params.subfolder} """
+        """-p circles """
+        """-sort 1 """
+        """-bb 1 """
+
+
+rule genes_to_bed:
+    input:        
+        config["annot"],
+    output:
+        genes_coding = "genes_coding.gtf",
+        genes = "hg19_genes_coding_no_overlap.bed",
+    shell:
+        """cat {input} | """
+        """awk '$3 == "gene"'| """
+        """awk -F ';' '$3 ~ /"protein_coding"/ && $7 ~ /"KNOWN"/' > {output.genes_coding}; """
+        """bedtools intersect -a {output.genes_coding} -b {output.genes_coding} -c -s  | """
+        """awk -F'\t' '$10 == 1' | """
+        """awk -F'[\t;]' '{{print $1,"\011",$4,"\011",$5,"\011",$13,"\011","0","\011",$7}}' | """
+        """awk -F'[ \t]+' '{{OFS = "\t" }};{{print $1,$2-1,$3-1,$5,$6,$7}}' | """
+        """tr -d '"'  > {output.genes}"""
+        
+
+rule circles_in_genes:
+    input:
+        circles = "{params.circ_folder}/bed/circles.single.bed",
+        genes = "hg19_genes_coding_no_overlap.bed",
+    output:
+        "{params.circ_folder}/bed/circles_in_genes.bed",
+    params:
+        circ_folder = config["circles_folder"],
+    shell:
+        "bedtools intersect -a {input.circles} -b {input.genes} -s -wa > {output}"
+
+
+rule circles_with_genes:
+    input:
+        circles = "{params.circ_folder}/bed/circles.single.bed",
+        genes = "hg19_genes_coding_no_overlap.bed",
+    output:
+        "{params.circ_folder}/bed/circles_with_genes.bed",
+    params:
+        circ_folder = config["circles_folder"],
+    shell:        
+        "bedtools intersect -a {input.circles} -b {input.genes} -s -wo > {output}"
+
+
+rule panhandles_in_genes:
+    input:
+        panhandles = config["panhandles"],
+        genes = "hg19_genes_coding_no_overlap.bed",
+    output:
+        "panhandles_in_genes.bed",
+    shell:        
+        "bedtools intersect -a {input.panhandles} -b {input.genes} -s -wa > {output}"
+
+
+rule panhandles_with_genes:
+    input:
+        panhandles = config["panhandles"],
+        genes = "hg19_genes_coding_no_overlap.bed",
+    output:
+        "panhandles_with_genes.bed",
+    shell:        
+        "bedtools intersect -a {input.panhandles} -b {input.genes} -s -wo > {output}"
+
+
+rule circles_with_panhandles:
+    input:
+        a_file = "{params.circ_folder}/bed/circles_in_genes.bed",
+        b_file = "panhandles_in_genes.bed",
+    output:
+        "{params.circ_folder}/bed/circles_panhandles.bed",
+    params:
+        circ_folder = config["circles_folder"],
+    shell:
+        "bedtools intersect -a {input.a_file} -b {input.b_file} -s -wo > {output}"
+
+
+rule panhandles_with_circles:
+    input:
+        b_file = "{params.circ_folder}/bed/circles_in_genes.bed",
+        a_file = "panhandles_in_genes.bed",
+    output:
+        "{params.circ_folder}/bed/panhandles_circles.bed",
+    params:
+        circ_folder = config["circles_folder"],
+    shell:
+        "bedtools intersect -a {input.a_file} -b {input.b_file} -s -wo > {output}"
+
+'''
+rule random_shuffle:
+    input:
+        features = config["panhandles"],
+        genes = "hg19_genes_coding_no_overlap.bed",
+    output:
+        temp(directory("{params.circ_folder}/random")),
+    params: 
+        circ_folder = config["circles_folder"],
+        iter = config["iterations"],
+        methods = config["methods"],
+        closest = config["closest"],
+        chrom_sizes = config["chrom_sizes"],        
+    conda:
+        config["env"]
+    shell:
+        "ptes.random_shuffle -m {params.methods} -c {params.closest} -f {input.features} -g {input.genes} "
+        " -iter {params.iter} -o {params.circ_folder} -s {params.chrom_sizes} "
+
+
+rule bed_to_overlaps:
+    input:
+        input = "{params.circ_folder}/bed/circles_panhandles.bed",
+        random_dir = "{params.circ_folder}/random",
+        circles = "{params.circ_folder}/bed/circles.single.bed",
+    output:
+        expand("{folder}/histograms_{method}.png", method=config["methods"], folder=config["circles_folder"]),
+    params: 
+        circ_folder = config["circles_folder"],
+        iter = config["iterations"],
+        methods = config["methods"],        
+    conda:
+        config["env"]
+    shell:
+        "ptes.bed_to_overlaps -m {params.methods} -i {input.input} -f {input.circles} "
+        "-iter {params.iter} -o {params.circ_folder} -a circles -b panhandles "
+
+
+rule random_shuffle_backwards:
+    input:
+        features = "{params.circ_folder}/bed/circles.single.bed",
+        genes = "hg19_genes_coding_no_overlap.bed",
+    output:
+        temp(directory("{params.folder}/random")),
+    params:
+        circ_folder = config["circles_folder"],
+        folder = "{params.circ_folder}/backwards",
+        iter = config["iterations"],
+        methods = config["methods"],
+        closest = config["closest"],
+        chrom_sizes = config["chrom_sizes"],        
+    conda:
+        config["env"],
+    shell:
+        "ptes.random_shuffle -m {params.methods} -c {params.closest} -f {input.features} -g {input.genes} "
+        " -iter {params.iter} -o {params.folder} -s {params.chrom_sizes} "
+
+
+rule bed_to_overlaps_backwards:
+    input:
+        input = "{params.circ_folder}/bed/panhandles_circles.bed",
+        random_dir = "{params.folder}/random",
+        panhandles = config["panhandles"],
+    output:
+        expand("{folder}/backwards/histograms_{method}.png", method=config["methods"], folder=config["circles_folder"]),
+    params:
+        circ_folder = config["circles_folder"],
+        folder = "{params.circ_folder}/backwards",
+        iter = config["iterations"],
+        methods = config["methods"],        
+    conda:
+        config["env"]
+    shell:
+        "ptes.bed_to_overlaps -m {params.methods} -i {input.input} -f {input.panhandles} "
+        "-iter {params.iter} -o {params.folder} -a panhandles  -b circles"
+
+'''

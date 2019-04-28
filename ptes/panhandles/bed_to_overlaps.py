@@ -6,7 +6,6 @@
 # Plots histogram for number of random intersections with real value
 
 # Imports
-from collections import defaultdict
 import argparse
 
 from interval import interval

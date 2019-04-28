@@ -60,7 +60,7 @@ def chim_input(chim_name, gtf_donors, gtf_acceptors, sam_dict, junc_dict):
     read_names_list = []
     skipped = {'non-filtered': 0,   # different chromosomes and/or chains
                'chrM': 0,      # mapping to chrM
-               'j_type-': 0,   # junction between the mates, -1 in STAR output
+               'PE': 0,   # junction between the mates, -1 in STAR output
                'non-chim': 0}   # STAR counts very long (>1Mb) junctions as chimeric
 
     with open(chim_name, 'r') as input_file:
@@ -80,7 +80,8 @@ def chim_input(chim_name, gtf_donors, gtf_acceptors, sam_dict, junc_dict):
                 continue
             if line_dict['junction_letters'] == '-':
                 PTES_logger.error('PE input, junction type -1 is present!')
-                skipped['j_type-'] += 1
+                PTES_logger.error('Current version works only with SE output')
+                skipped['PE'] += 1
                 continue
             if abs(line_dict['donor_ss'] - line_dict['acceptor_ss']) > 1000000 \
                     or chain == '+' and line_dict['donor_ss'] < line_dict['acceptor_ss'] \
@@ -269,7 +270,7 @@ def main():
     # Exons GTF to junctions dict
     PTES_logger.info('Reading GTF...')
     gtf_exons_name = args.gtf_annot
-    gtf_donors, gtf_acceptors = annot_junctions(gtf_exons_name=gtf_exons_name)
+    gtf_donors, gtf_acceptors = annot_junctions(gtf_exons_name=gtf_exons_name, feature_name='exon')
     PTES_logger.info('Reading GTF... done')
 
     # non-iterative

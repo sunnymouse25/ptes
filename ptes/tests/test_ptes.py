@@ -335,7 +335,7 @@ class TestPtes(unittest.TestCase):
             True,
         ]
         for i, tuple in enumerate(interval_lists):
-            res_int = ptes.randomize_interval(small_i=tuple[0], large_i=tuple[1], same_position=True)
+            res_int = ptes.randomize_interval(small_i=tuple[0], large_i=tuple[1], same_position=True, p=0.1)
             res_bool = res_int in interval[1, 100]
             print res_int, res_bool
 #            self.assertEqual(res_bool, exp_list[i])
