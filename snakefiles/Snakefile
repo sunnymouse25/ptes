@@ -1,15 +1,17 @@
 configfile: "general_config.yaml"
 
+'''
 rule all:
     input:
         "{folder}/bed/bed/circles.single.bed".format(folder=config["circles_folder"]),
-
 '''
+
 rule all:
     input:
         expand("{folder}/histograms_{method}.png", method=config["methods"], folder=config["circles_folder"]),
         expand("{folder}/backwards/histograms_{method}.png", method=config["methods"], folder=config["circles_folder"]),
 
+'''
 rule STAR_SE_chimeric:
     input:
         list_chimeric,   # TODO
@@ -33,6 +35,7 @@ rule STAR_SE_chimeric:
         "-gtf {params.annot}"
 
 '''
+
 rule list_circles:
     input:
         mate1 = expand("{folder}/{sample}/mate1_Chimeric.out.junction.filtered",
@@ -46,13 +49,14 @@ rule list_circles:
         tags="circles_tag",
     run:
         with open(output.circles, "w") as out:
-            out.write('\n'.join(mate1))
-            out.write()
-            out.write('\n'.join(mate2))
-            out.write()
+            for x,y in zip(str(list({input.mate1})).split(), str(list({input.mate2})).split()):
+                out.write(x.strip("',[]")+'\n')
+                out.write(y.strip("',[]")+'\n')
         with open(output.tags, "w") as out2:
-            out2.write('\n'.join(config["samples"]["plus"]))
-            out2.write()
+            for sample in config["samples"]["plus"]:
+                out2.write(sample+'\n')
+                out2.write(sample+'\n')
+
 
 
 rule star_to_circles:
@@ -94,7 +98,7 @@ rule circles_to_bed:
     conda:
         config["env"],
     shell:
-        """python ptes.junctions_to_bed """
+        """ptes.junctions_to_bed """
         """-t {input.reads} """
         """-j {input.json} """
         """-gz 1 """

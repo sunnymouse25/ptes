@@ -186,7 +186,11 @@ def annot_junctions(gtf_exons_name, feature_name='exon'):
     gtf_acceptors = defaultdict(set)
     with open(gtf_exons_name, 'r') as gtf_exons_file:
         for line in gtf_exons_file:
+            if line.startswith('#'):
+                continue
             line_list = line.strip().split()
+            if len(line_list) < 9:
+                continue
             chrom = line_list[0]
             feature = line_list[2]
             if feature != feature_name:
@@ -400,6 +404,8 @@ def star_line_dict(line):
     :return: dictionary of attrs, type int or str
     """
     line_list = line.strip().split('\t')
+    if len(line_list) < 14:
+        return None
     junction_type = line_list[6]  # junction type: -1=encompassing junction (between the mates), 1=GT/AG, 2=CT/AC
     if junction_type == '1':
         junction_letters = 'GT/AG'

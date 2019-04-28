@@ -66,6 +66,8 @@ def chim_input(chim_name, gtf_donors, gtf_acceptors, sam_dict, junc_dict):
     with open(chim_name, 'r') as input_file:
         for i, line in enumerate(input_file):
             line_dict = star_line_dict(line=line)
+            if not line_dict:
+                continue
             if line_dict['chrom1'] == line_dict['chrom2'] \
                     or line_dict['chain1'] == line_dict['chain2']:
                 chrom = line_dict['chrom1']
