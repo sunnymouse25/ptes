@@ -60,7 +60,6 @@ def main():
                'non-chim': 0}   # STAR counts very long (>1Mb) junctions as chimeric
 
     junc_dict = defaultdict(dict)
-    read_names_list = []
 
     # Exons GTF to junctions dict
     PTES_logger.info('Reading GTF...')
@@ -82,7 +81,7 @@ def main():
     for chim_name, tag in pairs:
         annot_donors = 0
         annot_acceptors = 0
-
+        read_names_list = []
         PTES_logger.info('Input file: %s ' % chim_name)
 
         PTES_logger.info('Reading STAR output...')

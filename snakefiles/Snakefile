@@ -64,9 +64,9 @@ rule star_to_circles:
         circles="circles_list",
         tags="circles_tag",
     output:
-        "{params.circ_folder}/chim_junctions.csv",
-        "{params.circ_folder}/chim_reads.csv",
-        "{params.circ_folder}/junc_dict.json.gz",
+        "{folder}/chim_junctions.csv".format(folder=config["circles_folder"]),
+        "{folder}/chim_reads.csv".format(folder=config["circles_folder"]),
+        "{folder}/junc_dict.json.gz".format(folder=config["circles_folder"]),
     conda:
         config["env"],
     params:
@@ -128,10 +128,10 @@ rule genes_to_bed:
 
 rule circles_in_genes:
     input:
-        circles = "{params.circ_folder}/bed/circles.single.bed",
+        circles = "{folder}/bed/circles.single.bed".format(folder=config["circles_folder"]),
         genes = "hg19_genes_coding_no_overlap.bed",
     output:
-        "{params.circ_folder}/bed/circles_in_genes.bed",
+        "{folder}/bed/circles_in_genes.bed".format(folder=config["circles_folder"]),
     params:
         circ_folder = config["circles_folder"],
     shell:
