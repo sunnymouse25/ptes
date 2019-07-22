@@ -106,7 +106,7 @@ def main():
 
     PTES_logger.info('Reading input file... done')
 
-    PTES_logger.info('Running random intersections... ')
+    PTES_logger.info('Running intersections with random files... ')
     random_dicts = {}   # method - category - list of values
     categories = ['a_in_b', 'b_in_a', 'overlap']
     for method in args.method:
@@ -124,7 +124,7 @@ def main():
             for cat in categories:
                 random_dicts[method][cat].append(random_dict[cat])
 
-    PTES_logger.info('Running random intersections... done')
+    PTES_logger.info('Running intersections with random files... done')
 
     PTES_logger.info('Creating output files...')
     # plotting
