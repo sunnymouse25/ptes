@@ -39,12 +39,13 @@ class TestStar(unittest.TestCase):
         5 random lines from ENCFF636QII/mate1_Aligned.out.sam
         :return: dicts with attributes
         """
+        '''
         with open(os.path.join(INPUT_DIR,'Aligned.out.sam.shuf')) as sam_file:
             for line in sam_file:
                 row = line.strip().split('\t')
                 if len(row) > 1:
                     res_dict = ptes.parse_sam_row(row=row)
-
+        '''
     def test_sam_input(self, dump=False):
         res_dict = star_SE_chimeric.sam_input(sam_name=os.path.join(INPUT_DIR, 'Aligned.out.sam.shuf'),
                                               chim_name=os.path.join(INPUT_DIR, 'Chimeric.out.junction.shuf'))
@@ -57,7 +58,7 @@ class TestStar(unittest.TestCase):
             self.assertEqual(res_dict, res_dict_exp)
 
     def test_chim_input(self, dump=False):
-        junc_dict = defaultdict(list)
+        junc_dict = defaultdict(dict)
         sam_dict = star_SE_chimeric.sam_input(sam_name=os.path.join(INPUT_DIR, 'Aligned.out.sam.shuf'),
                                               chim_name=os.path.join(INPUT_DIR, 'Chimeric.out.junction.shuf'),
                                               )

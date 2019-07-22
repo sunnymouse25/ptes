@@ -1,0 +1,46 @@
+# BAM/FASTQ files from ENCODE to mate_inside/mate_outside
+
+### INPUT FILES
+
+env: "/home/sunnymouse/projects/PTES/python2.bio.yaml"
+
+# Project folder with STAR Chimeric output in subfolders
+project_folder:
+    "/home/sunnymouse/projects/PTES/ENCODE"
+
+# TODO metadata table to ids
+#ENCODE ids for polyA+ and polyA-, also used as folder names with STAR output
+samples:
+    plus: ["ENCFF064IOO","ENCFF074BOV","ENCFF126QEZ","ENCFF131JRU","ENCFF148RNW","ENCFF280XOG","ENCFF321CCY","ENCFF486POD","ENCFF636QII","ENCFF670LIE","ENCFF887ZOX","ENCFF890WWJ",]
+    minus: ["ENCFF040ZWV","ENCFF045NDR","ENCFF054FHQ","ENCFF394YNR","ENCFF409KXZ","ENCFF445OEZ","ENCFF600VKV","ENCFF655YFM","ENCFF703WLE","ENCFF720AGD","ENCFF849DPK","ENCFF995FQE",]
+
+# genome annotation from GENCODE in ref_folder
+annot:
+    "/home/sunnymouse/Human_ref/gencode.v19.annotation.gtf"
+chrom_sizes:
+    "/home/sunnymouse/Human_ref/hg19.chrom.sizes"
+
+panhandles:
+    "/home/sunnymouse/projects/PTES/panhandles/new_panhandles.bed6"
+#    "/home/sunnymouse/projects/PTES/panhandles/old_panhandles.bed6"
+
+
+### OUTPUT
+# Subfolder for mate_inside & mate_outside results, should not be the same as circles_folder
+chimeric_folder:
+    "result_SE"
+
+# Subfolder for all circles results, should not be the same as chimeric_folder
+circles_folder:
+    "circles_snakemake"
+
+iterations: 1000
+
+# how to shuffle
+methods: ['inside', 'outside', 'bedtools', ]
+
+# find close genes by length or by coverage
+closest: 'length'
+
+tag: 'all_Chimeric'
+

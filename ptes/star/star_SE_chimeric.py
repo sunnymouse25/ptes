@@ -60,12 +60,14 @@ def chim_input(chim_name, gtf_donors, gtf_acceptors, sam_dict, junc_dict):
     read_names_list = []
     skipped = {'non-filtered': 0,   # different chromosomes and/or chains
                'chrM': 0,      # mapping to chrM
-               'j_type-': 0,   # junction between the mates, -1 in STAR output
+               'PE': 0,   # junction between the mates, -1 in STAR output
                'non-chim': 0}   # STAR counts very long (>1Mb) junctions as chimeric
 
     with open(chim_name, 'r') as input_file:
         for i, line in enumerate(input_file):
             line_dict = star_line_dict(line=line)
+            if not line_dict:
+                continue
             if line_dict['chrom1'] == line_dict['chrom2'] \
                     or line_dict['chain1'] == line_dict['chain2']:
                 chrom = line_dict['chrom1']
@@ -80,7 +82,8 @@ def chim_input(chim_name, gtf_donors, gtf_acceptors, sam_dict, junc_dict):
                 continue
             if line_dict['junction_letters'] == '-':
                 PTES_logger.error('PE input, junction type -1 is present!')
-                skipped['j_type-'] += 1
+                PTES_logger.error('Current version works only with SE output')
+                skipped['PE'] += 1
                 continue
             if abs(line_dict['donor_ss'] - line_dict['acceptor_ss']) > 1000000 \
                     or chain == '+' and line_dict['donor_ss'] < line_dict['acceptor_ss'] \
@@ -152,7 +155,6 @@ def return_mate_tuple(line_dict, second_mates, chrom, chain):
     chim_part2 = get_read_interval(cigar=line_dict['cigar2'],
                                    leftpos=line_dict['coord2'],
                                    )
-    mate1 = one_interval(dict_to_interval(chim_part1) | dict_to_interval(chim_part2))
     for mate in second_mates:
         if mate['cigar'] == line_dict['cigar1'] \
                 or mate['cigar'] == line_dict['cigar2']:
@@ -166,8 +168,9 @@ def return_mate_tuple(line_dict, second_mates, chrom, chain):
                 continue
         if mate['chrom'] == chrom and mate['chain'] != chain:
             mate2_dict = get_read_interval(cigar=mate['cigar'], leftpos=mate['leftpos'])
-            mate2 = one_interval(dict_to_interval(mate2_dict))
-            interval_intersection = mate_intersection(mate1, mate2)
+            interval_intersection = mate_intersection(chim_part1=chim_part1,
+                                                      chim_part2=chim_part2,
+                                                      read_dict2=mate2_dict)
             return chim_part1, chim_part2, mate2_dict, interval_intersection
     return None
 
@@ -269,12 +272,13 @@ def main():
     # Exons GTF to junctions dict
     PTES_logger.info('Reading GTF...')
     gtf_exons_name = args.gtf_annot
-    gtf_donors, gtf_acceptors = annot_junctions(gtf_exons_name=gtf_exons_name)
+    gtf_donors, gtf_acceptors = annot_junctions(gtf_exons_name=gtf_exons_name, feature_name='exon')
     PTES_logger.info('Reading GTF... done')
 
     # non-iterative
     make_dir(args.output)
     junc_dict = defaultdict(dict)
+    all_reads_df = None
 
     if args.list:
         with open(args.input, 'r') as chim_names_file:
@@ -293,10 +297,10 @@ def main():
         PTES_logger.info('Input file %s' % chim_name)
 
         # Reading filtered STAR non-chim output
-        PTES_logger.info('Reading STAR non-chimeric output...')
+        PTES_logger.info('Reading STAR .sam output...')
         sam_dict = sam_input(sam_name=sam_name,
                             chim_name=chim_name)
-        PTES_logger.info('Reading STAR non-chimeric output... done')
+        PTES_logger.info('Reading STAR .sam output... done')
 
         # Reading filtered STAR output
         PTES_logger.info('Reading STAR chimeric output...')
@@ -328,28 +332,29 @@ def main():
     if args.list:
         all_reads_df = pd.concat(chim_reads_df_list, sort=True).reset_index(drop=True)
 
-    # Writing reads dataframe
-    PTES_logger.info('Writing reads dataframe...')
-    all_reads_df.to_csv(os.path.join(args.output, 'chim_reads.csv'), sep='\t')
-    PTES_logger.info('Writing reads dataframe... done')
+    if all_reads_df is not None:
+        # Writing reads dataframe
+        PTES_logger.info('Writing reads dataframe...')
+        all_reads_df.to_csv(os.path.join(args.output, 'chim_reads.csv'), sep='\t')
+        PTES_logger.info('Writing reads dataframe... done')
 
-    # Writing junc_dict
-    PTES_logger.info('Writing intervals to json file...')
-    if args.gzip:
-        PTES_logger.info('Output will be archived')
-        with gzip.GzipFile(os.path.join(args.output, 'junc_dict.json.gz'), 'w') as junc_json:
-            junc_json.write(json.dumps({str(k): v for k, v in junc_dict.items()}).encode('utf-8'))
-    else:
-        with open(os.path.join(args.output, 'junc_dict.json'), 'w') as junc_json:
-            json.dump({str(k): v for k, v in junc_dict.items()}, junc_json, indent=2)
+        # Writing junc_dict
+        PTES_logger.info('Writing intervals to json file...')
+        if args.gzip:
+            PTES_logger.info('Output will be archived')
+            with gzip.GzipFile(os.path.join(args.output, 'junc_dict.json.gz'), 'w') as junc_json:
+                junc_json.write(json.dumps({str(k): v for k, v in junc_dict.items()}).encode('utf-8'))
+        else:
+            with open(os.path.join(args.output, 'junc_dict.json'), 'w') as junc_json:
+                json.dump({str(k): v for k, v in junc_dict.items()}, junc_json, indent=2)
 
-    PTES_logger.info('Writing intervals to json file... done')
+        PTES_logger.info('Writing intervals to json file... done')
 
-    # Writing junctions dataframe
-    PTES_logger.info('Creating junctions dataframe...')
-    junctions_df = reads_to_junctions(reads_df=all_reads_df)
-    junctions_df.to_csv(os.path.join(args.output, 'chim_junctions.csv'), sep='\t')
-    PTES_logger.info('Creating junctions dataframe... done')
+        # Writing junctions dataframe
+        PTES_logger.info('Creating junctions dataframe...')
+        junctions_df = reads_to_junctions(reads_df=all_reads_df)
+        junctions_df.to_csv(os.path.join(args.output, 'chim_junctions.csv'), sep='\t')
+        PTES_logger.info('Creating junctions dataframe... done')
 
 
 if __name__ == "__main__":

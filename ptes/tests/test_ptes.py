@@ -135,7 +135,7 @@ class TestPtes(unittest.TestCase):
             self.assertEqual(exp_intervals[i], res_interval)
 
 
-    def test_mate_intersection(self):
+    def test_mate_intersection_old(self):
         res_list = [
             ['inside', 'outside', 'outside'],
             ['inside', 'inside', 'outside'],
@@ -153,7 +153,36 @@ class TestPtes(unittest.TestCase):
         ]
         for i, mate1 in enumerate(mates1):
             for j, mate2 in enumerate(mates2):
-                self.assertEqual(ptes.mate_intersection(mate1, mate2), res_list[i][j])
+                self.assertEqual(ptes.mate_intersection_old(mate1, mate2), res_list[i][j])
+
+    def test_mate_intersection(self):
+
+        chim_parts1 = [
+            {'M1': interval([100.0, 119.0])},
+            {'M1': interval([152.0, 171.0], [1000.0, 1200.0])},
+            {'M1': interval([100.0, 119.0], [1000.0, 1200.0])},
+        ]
+        chim_parts2 = [
+            {'M1': interval([152.0, 171.0])},
+            {'M1': interval([100.0, 119.0])},
+            {'M1': interval([152.0, 171.0], [2000.0, 2030.0])},
+        ]
+        mates2 = [
+            {'M1': interval([120.0, 151.0])},
+            {'M1': interval([1100.0, 1200.0])},
+            {'M1': interval([1190.0, 1209.0]), 'N1': interval([1210.0, 1260.0]), 'M2': interval([1261.0, 1265.0]),},
+            {'M1': interval([1190.0, 1209.0]), 'N1': interval([1216.0, 1260.0]), 'M2': interval([1261.0, 1299.0]),},
+        ]
+        res_list = [
+            ['inside', 'outside', 'outside', 'outside'],
+            ['inside', 'inside', 'outside', 'outside'],
+            ['inside', 'inside', 'inside', 'inside'],
+                    ]
+        for i, mate1 in enumerate(chim_parts1):
+            for j, mate2 in enumerate(mates2):
+                self.assertEqual(ptes.mate_intersection(chim_part1=mate1,
+                                                         chim_part2=chim_parts2[i],
+                                                         read_dict2=mate2), res_list[i][j])
 
 
     def test_return_mates(self):
@@ -306,7 +335,7 @@ class TestPtes(unittest.TestCase):
             True,
         ]
         for i, tuple in enumerate(interval_lists):
-            res_int = ptes.randomize_interval(small_i=tuple[0], large_i=tuple[1], same_position=True)
+            res_int = ptes.randomize_interval(small_i=tuple[0], large_i=tuple[1], same_position=True, p=0.1)
             res_bool = res_int in interval[1, 100]
             print res_int, res_bool
 #            self.assertEqual(res_bool, exp_list[i])

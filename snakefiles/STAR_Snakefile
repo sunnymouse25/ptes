@@ -1,0 +1,72 @@
+# Input: BAM files
+# Requires: samtools, STAR, python 2.7, bedToBigBed script from UCSC (optional)
+# Makes FASTQ files
+# Runs STAR in chimeric mode   # TODO look for the command in thesis
+# Makes tables with chimeric reads and junctions, with classification on "mate_inside" and "mate_outside"
+# Makes tables with single chimeric reads (here - circles)
+# Makes tables with normal junctions
+# Using these tables, makes BED files, also bigBed for viewing in UCSC Genome Browser
+
+
+# TODO check if any commands could be written in bash rather than python
+# TODO rename these two files
+
+import glob
+configfile: "star_config.yaml"
+
+
+rule all:
+    input:
+        "{folder}/bed/circles.single.bed".format(folder=config["circles_folder"]),
+
+
+rule bam_to_fastq:
+    input:
+        ids, = glob_wildcards("{folder}/{id}.bam".format(folder=config["bam_folder"]))
+    output:
+        fq1 = {project_folder}/{id}/{id}.fq1.gz
+        fq2 = {project_folder}/{id}/{id}.fq2.gz
+    params:
+        project_folder = config["project_folder"]
+    shell:
+        "samtools collate -uOn 256 {folder}/{id}.bam tmp-prefix | ".format(folder=config["bam_folder"])
+        "samtools fastq -1 {output.fq1} -2 {output.fq2} - "
+
+
+rule make_star_indices:
+    input:
+        chroms, = glob_wildcards("{folder}/{chrom}.fa".format(folder=config["genome_fasta_folder"]))
+    output:
+        config["genome_indices"]
+    params:
+        n_threads = config["threads"]
+        annot = config["annot"]
+    shell:
+        "STAR --runThreadN {params.n_threads} "
+        "--runMode genomeGenerate "
+        "--genomeDir {output} "
+        "--genomeFastaFiles {input.chroms} "
+        "--sjdbGTFfile {params.annot} "
+
+
+rule STAR_SE_chimeric:
+    input:
+        list_chimeric,   # TODO
+        list_sam,
+        list_tag,
+    output:
+        "{params.folder}/chim_junctions.csv",
+        "{params.folder}/chim_reads.csv",
+        "{params.folder}/junc_dict.json.gz",
+    params:
+        folder = config["chimeric_folder"],
+        annot = config["annot"],
+    shell:
+        "ptes.star_SE_chimeric "
+        "-l 1 "
+        "-i {input.list_chimeric} "
+        "-s {input.list_sam} "
+        "-t {input.list_tag} "
+        "-o {params.folder} "
+        "-gz 1 "
+        "-gtf {params.annot}"

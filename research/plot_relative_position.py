@@ -8,9 +8,11 @@
 # Imports
 import argparse
 import os
+import json
 
 from interval import interval
 import matplotlib.pyplot as plt
+from collections import defaultdict
 import seaborn as sns
 plt.switch_backend('agg')
 
@@ -40,18 +42,18 @@ args = parser.parse_args()
 
 # Main
 make_dir(args.output)
-path_to_file = args.output.rstrip('/')
 PTES_logger.info('Creating intersection file... ')
-intersection_name = '%s/%s' % (path_to_file, os.path.basename(args.features)+'.intersect')
+intersection_name = os.path.join(args.output, os.path.basename(args.features)+'.intersect')
 cmd = 'bedtools intersect -a %s -b %s -s -wo > %s' % (args.features,
-                                                   args.genes,
-                                                   intersection_name,
-                                                    )
+                                                      args.genes,
+                                                      intersection_name,
+                                                      )
 shell_call(cmd)
 PTES_logger.info('Creating intersection file... done')
 PTES_logger.info('Reading intersection file... ')
 
 p_dict = {}
+gene_p_dict = defaultdict(list)
 feature_len_list = []
 gene_len_list = []
 
@@ -64,91 +66,73 @@ with open(intersection_name, 'r') as intersect_file:
         chrom1 = line_list[0]
         feature_interval = interval[int(line_list[1]), int(line_list[2])]
         gene_interval = interval[int(line_list[b_start + 1]), int(line_list[b_start + 2])]
+        gene_name = line_list[b_start+3]
+        gene_tuple = (chrom1, line_list[b_start+5], line_list[b_start + 1], line_list[b_start + 2], gene_name)
         feature_len = get_interval_length(feature_interval)
         feature_len_list.append(feature_len)
         gene_len = get_interval_length(gene_interval)
         gene_len_list.append(gene_len)
         if feature_len <= gene_len:
             if args.strand:
+                feature_list = [chrom1, line_list[5], line_list[1], line_list[2]]  # chrom, chain, start, end
                 try:
                     container_strand = line_list[b_start + 5]
-                    p_dict[feature_interval] = count_relative_position(feature=feature_interval,
-                                                                       container=gene_interval,
-                                                                       container_strand=container_strand)
+                    p = count_relative_position(
+                        feature=feature_interval,
+                        container=gene_interval,
+                        container_strand=container_strand)
+                    feature_tuple = tuple(feature_list + [p])
+                    gene_p_dict[gene_tuple].append(feature_tuple)
                 except IndexError:
                     PTES_logger.error('No strand found')
                     PTES_logger.error('BED6 format is required for plotting strand-specific position')
-                    p_dict[feature_interval] = count_relative_position(feature=feature_interval,
-                                                                       container=gene_interval,
-                                                                       container_strand='.')
+                    continue
             else:
-                p_dict[feature_interval] = count_relative_position(feature=feature_interval,
-                                                                   container=gene_interval)
+                feature_list = [chrom1, line_list[1], line_list[2]]  # chrom, start, end
+                p = count_relative_position(feature=feature_interval,
+                                            container=gene_interval)
+                feature_tuple = tuple(feature_list + [p])
+                gene_p_dict[gene_tuple].append(feature_tuple)
         else:
-            p_dict[feature_interval] = 2
+            if args.strand:
+                feature_tuple = (chrom1, line_list[5], line_list[1], line_list[2], 2)  # chrom, chain, start, end
+            else:
+                feature_tuple = (chrom1, line_list[1], line_list[2], 2)  # chrom, start, end
+
+            gene_p_dict[gene_tuple].append(feature_tuple)
 
 
 PTES_logger.info('Reading intersection file... done')
-
-PTES_logger.info('Counting features that are absent in intersection file... ')
-
-with open(args.features, 'r') as features_file:
-    for i, line in enumerate(features_file):
-        if line.startswith('#'):
-            continue
-        line_list = line.strip().split()
-        chrom1 = line_list[0]
-        feature_interval = interval[int(line_list[1]), int(line_list[2])]
-        if not p_dict.get(feature_interval, None):
-            p_dict[feature_interval] = -1
-
-PTES_logger.info('Counting features that are absent in intersection file... done')
-
-PTES_logger.info('Plotting... ')
-
-fig = plt.figure(figsize=(8,12))
-plt.suptitle('Features: %s;' % args.features + '\n' + 'containers: %s' % args.genes)
-ax1 = fig.add_subplot(321)
-ax1.hist(p_dict.values(), bins=150)
-ax1.set(title='Relative location')
-
-ax12 = fig.add_subplot(322)
-ax12.boxplot(p_dict.values())
-ax12.set(title='Relative location')
-
-ax2 = fig.add_subplot(323)
-ax2.hist(feature_len_list)
-ax2.set_xlim(0, 10000)
-ax2.set(title='Features length')
-
-ax22 = fig.add_subplot(324)
-ax22.boxplot(feature_len_list)
-ax22.set_ylim(0, 200000)
-ax22.set(title='Features length')
-
-ax3 = fig.add_subplot(325)
-ax3.hist(gene_len_list)
-ax3.set_xlim(0, 500000)
-ax3.set(title='Containers length')
-
-ax32 = fig.add_subplot(326)
-ax32.boxplot(gene_len_list)
-ax3.set_ylim(0, 500000)
-ax32.set(title='Containers length')
-
-#fig.tight_layout()
-plt.savefig('%s/%s_relative_position.png' % (path_to_file, args.prefix))
-
-PTES_logger.info('Plotting... done')
 PTES_logger.info('Saving output to file... ')
-with open('%s/%s_relative_position.txt' % (path_to_file, args.prefix), 'w') as out_file:
-    out_file.write('Relative positions: \n')
-    out_file.write(','.join(map(str,p_dict.values())) + '\n')
+PTES_logger.info('Length of dict is %i ' % len(gene_p_dict))
+with open(os.path.join(args.output, args.prefix+'_gene_p_dict.json'), 'w') as gene_p_json:
+    json.dump({str(k): v for k, v in gene_p_dict.items()}, gene_p_json, indent=2)
+with open(os.path.join(args.output, args.prefix+'_lengths.txt'), 'w') as out_file:
     out_file.write('Feature lengths: \n')
     out_file.write(','.join(map(str, feature_len_list)) + '\n')
     out_file.write('Gene lengths: \n')
     out_file.write(','.join(map(str, gene_len_list)) + '\n')
 PTES_logger.info('Saving output to file... done')
+
+PTES_logger.info('Plotting... ')
+all_values = []
+for gene, values in gene_p_dict.items():
+    for value in values:
+        all_values.append(value[-1])
+
+fig = plt.figure(figsize=(6,4))
+plt.suptitle('Features: %s;' % args.features + '\n' + 'containers: %s' % args.genes)
+ax1 = fig.add_subplot(111)
+ax1.hist(all_values, bins=100)
+ax1.set_xlim(0,1)
+fig.subplots_adjust(top=0.9)
+
+
+#fig.tight_layout()
+plt.savefig(os.path.join(args.output, args.prefix+'_relative_position.png'))
+
+PTES_logger.info('Plotting... done')
+
 
 
 

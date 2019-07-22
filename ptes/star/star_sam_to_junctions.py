@@ -29,7 +29,6 @@ def reads_to_junctions(reads_df, gtf_donors, gtf_acceptors):
     yy = reads_df.pivot_table(index=index_list,
                               values=['id'],
                               aggfunc=lambda id: len(id.unique()))
-    print yy
     yy['annot_donor'] = 0
     yy['annot_acceptor'] = 0
     for idx, row in yy.iterrows():
@@ -37,7 +36,6 @@ def reads_to_junctions(reads_df, gtf_donors, gtf_acceptors):
         row['annot_acceptor'] = 1 if idx[3] in gtf_acceptors[idx[0]] else 0
 
     yy.rename(index=str, columns={"id": "n_reads"})
-    print yy
     return yy.sort_values(index_list)
 
 
@@ -96,7 +94,10 @@ def main():
                 names_set = set(names_list)  # only names with chimeric output
 
         with open(sam_name, 'r') as sam_file:
+            PTES_logger.info('Input file %s' % sam_name)
             for line in sam_file:
+                if line.startswith('@'):
+                    continue
                 row = line.strip().split('\t')
                 sam_attrs = None
                 if len(row) > 1:
